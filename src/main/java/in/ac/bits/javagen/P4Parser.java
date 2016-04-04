@@ -17,7 +17,7 @@ public class P4Parser {
     private List<String> fieldList;
     private List<Integer> startBits;
 
-    public void generateHeaderClass(String headerString) {
+    public void generateHeaderClass(String headerString, String className, String pathName, String packageName) {
 
         fieldList = new ArrayList<String>();
         startBits = new ArrayList<Integer>();
@@ -48,9 +48,9 @@ public class P4Parser {
                 System.out.println("Field value: " + startBit);
                 linePtr++;
             }
-            generator.setClassName("EthernetHeader");
-            generator.setPackageName("in.bits.protocolanalyzer.header");
-            generator.setPath("/home/mihirkakrambe/workspace/");
+            generator.setClassName(className);
+            generator.setPackageName(packageName);
+            generator.setPath(pathName);
             generator.generateHeaderClass(fieldList, startBits, 0);
 
         } else {

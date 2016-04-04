@@ -1,10 +1,12 @@
 package in.ac.bits.javagen.mvc;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -29,12 +31,17 @@ public class MainController {
         return mav;
     }
 
-    @RequestMapping(value = "/read", method = RequestMethod.GET)
-    public @ResponseBody String readFile(
-            @RequestParam("graph") String headerString) {
+    @RequestMapping(value = "read", method = RequestMethod.POST)
+    public @ResponseBody String readFile(@RequestBody Header header,
+            HttpServletRequest request) {
         String status = "success";
-        System.out.println("Status = " +status);
-        parser.generateHeaderClass(headerString);
+        System.out.println("class = " + header.getClassName());
+        System.out.println("path = " + header.getPath());
+        System.out.println("package = " + header.getPackageName());
+        System.out.println("Status = " + status);
+        parser.generateHeaderClass(header.getHeaderString(),
+                header.getClassName(), header.getPath(),
+                header.getPackageName());
         return status;
     }
 

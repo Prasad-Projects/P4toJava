@@ -11,6 +11,7 @@
 	<properties>
 		<spring.core.version>4.1.5.RELEASE</spring.core.version>
 		<javax.jstl-taglibs.version>1.1.2</javax.jstl-taglibs.version>
+		<spring.data.rest.webmvc.version>2.0.1.RELEASE</spring.data.rest.webmvc.version>
 	</properties>
 
 	<dependencies>
@@ -37,6 +38,12 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>${spring.core.version}</version>
+		</dependency>
+		<!-- Spring Data Web MVC -->
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-rest-webmvc</artifactId>
+			<version>${spring.data.rest.webmvc.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax</groupId>
@@ -67,6 +74,13 @@
 			<groupId>jstl</groupId>
 			<artifactId>jstl</artifactId>
 			<version>1.2</version>
+		</dependency>
+		<!-- Project Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.6</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<build>

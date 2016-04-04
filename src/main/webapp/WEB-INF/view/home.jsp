@@ -16,13 +16,31 @@
 		<button id="genHello" type="submit">Generate File</button>
 	</form>
 
+	<!-- <button id="genHello" type="submit">Generate File</button> -->
+
 	<div>
 		<input type="file" id="fileInput" />
+	</div>
+
+	<div>
+		<h4>Enter class name:</h4>
+		<input type="text" id="className">
+	</div>
+
+	<div>
+		<h4>Enter path to save:</h4>
+		<input type="text" id="path">
+	</div>
+
+	<div>
+		<h4>Enter package name:</h4>
+		<input type="text" id="packageName">
 	</div>
 	<!-- <button id="genHello">Press to Generate</button> -->
 
 	<script type="text/javascript">
-		$("#genHello").click(
+		$("#genHello")
+				.click(
 						function() {
 
 							//Retrieve the first (and only!) File from the FileList object
@@ -32,14 +50,20 @@
 								var r = new FileReader();
 								r.onload = function(e) {
 									var userParseGraph = e.target.result;
-									$.ajax({
+									var formValues = {
+										headerString : userParseGraph,
+										className : $("#className").val(),
+										path : $("#path").val(),
+										packageName : $("#packageName").val()
+									};
+									$
+											.ajax({
 												url : '/p4tojava/read',
-												type : 'GET',
+												type : 'POST',
 												contentType : 'application/json; charset=utf-8',
 												dataType : 'text',
-												data : {
-													graph : userParseGraph
-												},
+												data : JSON
+														.stringify(formValues),
 												success : function(data) {
 													if (data === "success") {
 														console.log("Success!")
@@ -48,7 +72,8 @@
 													}
 												},
 												error : function() {
-													console.log("Something went wrong. Please try again later.");
+													console
+															.log("Something went wrong. Please try again later.");
 												}
 											});
 								}
