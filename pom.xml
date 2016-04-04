@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>com.squareup</groupId>
 			<artifactId>javapoet</artifactId>
-			<version>1.0.0</version>
+			<version>1.6.1</version>
 		</dependency>
 		<!-- JSP and JSTL tags and stuff -->
 		<dependency>
