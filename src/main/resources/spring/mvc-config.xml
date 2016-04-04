@@ -9,6 +9,13 @@
         http://www.springframework.org/schema/context 
         http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <mvc:annotation-driven conversion-service="conversionService" />
+    
+    <!-- Register the formatters -->
+    <bean id="conversionService"
+        class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    </bean>
+
     <context:component-scan base-package="in.ac.bits.javagen" />
 
     <mvc:resources mapping="/resources/**" location="/resources/" />
