@@ -13,5 +13,11 @@ public class MainController {
         ModelAndView mav = new ModelAndView("home");
         return mav;
     }
+    
+    @RequestMapping("/index")
+    public ModelAndView index() {
+        ModelAndView mav = new ModelAndView("index");
+        return mav;
+    }
 
 }

@@ -10,6 +10,7 @@
 
 	<properties>
 		<spring.core.version>4.1.5.RELEASE</spring.core.version>
+		<javax.jstl-taglibs.version>1.1.2</javax.jstl-taglibs.version>
 	</properties>
 
 	<dependencies>
@@ -48,6 +49,24 @@
 			<groupId>com.squareup</groupId>
 			<artifactId>javapoet</artifactId>
 			<version>1.0.0</version>
+		</dependency>
+		<!-- JSP and JSTL tags and stuff -->
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>${javax.jstl-taglibs.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>taglibs</groupId>
+			<artifactId>standard</artifactId>
+			<version>${javax.jstl-taglibs.version}</version>
+		</dependency>
+		<!-- Java Server Pages Standard Tag Library -->
+		<dependency>
+			<groupId>jstl</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
 		</dependency>
 	</dependencies>
 	<build>
