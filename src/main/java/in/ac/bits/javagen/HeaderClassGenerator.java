@@ -41,11 +41,11 @@ public class HeaderClassGenerator {
         fieldSpecs = new ArrayList<FieldSpec>();
         addFields(fields, startBits, offset);
 
-        com.squareup.javapoet.TypeSpec.Builder builder = TypeSpec
-                .classBuilder(this.className);
-        builder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
-        builder.addFields(fieldSpecs);
-        TypeSpec headerClass = builder.build();
+        FieldSpec totalLen = createTotalLenField();
+
+        TypeSpec headerClass = TypeSpec.classBuilder(this.className)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addFields(fieldSpecs).addField(totalLen).build();
 
         JavaFile javaFile = JavaFile.builder(packageName, headerClass).build();
         File file = new File(path);
@@ -59,6 +59,20 @@ public class HeaderClassGenerator {
             e.printStackTrace();
         }
         return this.fieldSpecs;
+    }
+
+    private FieldSpec createTotalLenField() {
+
+        FieldSpec lastByte = fieldSpecs.get(fieldSpecs.size() - 1);
+        System.out.println(
+                "Last byte received = " + lastByte.initializer.toString());
+
+        FieldSpec totalLen = FieldSpec.builder(int.class, "TOTAL_HEADER_LENGTH")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$L",
+                        Integer.parseInt(lastByte.initializer.toString()) + 1)
+                .build();
+        return totalLen;
     }
 
     private void addFields(List<String> fields, List<Integer> startBits,
