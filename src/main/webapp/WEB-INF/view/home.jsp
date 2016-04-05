@@ -7,8 +7,32 @@
 	
 </script>
 </head>
+
+<style type="text/css">
+#title {
+	text-align: center;
+	color: blue;
+}
+
+#caution {
+	color: red;
+}
+</style>
 <body>
-	<h2>This is the javagen webapp!!</h2>
+
+
+	<h2 id="title">Welcome to PacketAnalyzer Javagen Webapp</h2>
+
+	<p>This webapp powers the automation of java code generation from
+		relevant P4 files. Just plug in your P4 header specification file and
+		voila! It will automatically genreate the java header class marking
+		header boundaries in bits and bytes. You can build your PacketAnalyzer
+		project with these files (placed appropriately by this app itself!)
+		and run your new custom analysis.</p>
+
+	<p id="caution">Remember, the source folder of the project doesn't
+		mean "src" folder, it means the folder from where your root package
+		starts in the project.</p>
 
 
 	<form accept-charset="UTF-8" role="form" method="GET"
@@ -28,7 +52,7 @@
 	</div>
 
 	<div>
-		<h4>Enter path to save:</h4>
+		<h4>Enter source folder path:</h4>
 		<input type="text" id="path">
 	</div>
 
