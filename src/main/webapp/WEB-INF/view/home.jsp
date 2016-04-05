@@ -35,11 +35,6 @@
 		starts in the project.</p>
 
 
-	<form accept-charset="UTF-8" role="form" method="GET"
-		action="<c:url value="/index"/>">
-		<button id="genHello" type="submit">Generate File</button>
-	</form>
-
 	<!-- <button id="genHello" type="submit">Generate File</button> -->
 
 	<div>
@@ -59,8 +54,14 @@
 	<div>
 		<h4>Enter package name:</h4>
 		<input type="text" id="packageName">
+		<h4></h4>
 	</div>
 	<!-- <button id="genHello">Press to Generate</button> -->
+	
+	<form accept-charset="UTF-8" role="form" method="GET"
+        action="<c:url value="/index"/>">
+        <button id="genHello" type="submit">Generate File</button>
+    </form>
 
 	<script type="text/javascript">
 		$("#genHello")
