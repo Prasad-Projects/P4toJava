@@ -6,27 +6,38 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import in.ac.bits.javagen.mvc.Header;
+
 @Component
 public class P4Parser {
 
     @Autowired
     private HeaderClassGenerator generator;
 
-    private ArrayList<String> headerLines = new ArrayList<String>();
+    private ArrayList<String> headerLines;
 
     private List<String> fieldList;
     private List<Integer> startBits;
 
-    public void generateHeaderClass(String headerString, String className, String pathName, String packageName) {
+    public void generateHeaderClass(Header header) {
 
+        String headerString = header.getHeaderString();
+
+        System.out.println("Header string received: ");
+        System.out.println(headerString);
+        String className = header.getClassName();
+        String path = header.getPath();
+        String packageName = header.getPackageName();
         fieldList = new ArrayList<String>();
         startBits = new ArrayList<Integer>();
+        headerLines = new ArrayList<String>();
 
         String[] lines = headerString.split("\\r?\\n");
         removeBlankLines(lines);
-        for (int i = 0; i < headerLines.size(); i++) {
-            System.out.println("Line: " + i + " " + headerLines.get(i));
-        }
+        /*
+         * for (int i = 0; i < headerLines.size(); i++) { System.out.println(
+         * "Line: " + i + " " + headerLines.get(i)); }
+         */
         int linePtr = 0;
 
         if (headerLines.get(linePtr).contains("header")) {
@@ -50,7 +61,7 @@ public class P4Parser {
             }
             generator.setClassName(className);
             generator.setPackageName(packageName);
-            generator.setPath(pathName);
+            generator.setPath(path);
             generator.generateHeaderClass(fieldList, startBits, 0);
 
         } else {
@@ -58,21 +69,6 @@ public class P4Parser {
                     .println("Invalid file! Does not contain fields keyword!");
         }
 
-    }
-
-    private int collectNodes(int linePtr) {
-        int startLine = linePtr;
-        int lines = headerLines.size();
-        linePtr++;
-        while (linePtr < lines) {
-            if (!headerLines.get(linePtr).contains("graph")) {
-                linePtr++;
-            } else {
-                break;
-            }
-        }
-
-        return linePtr;
     }
 
     private void removeBlankLines(String[] lines) {

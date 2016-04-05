@@ -39,9 +39,7 @@ public class MainController {
         System.out.println("path = " + header.getPath());
         System.out.println("package = " + header.getPackageName());
         System.out.println("Status = " + status);
-        parser.generateHeaderClass(header.getHeaderString(),
-                header.getClassName(), header.getPath(),
-                header.getPackageName());
+        parser.generateHeaderClass(header);
         return status;
     }
 
