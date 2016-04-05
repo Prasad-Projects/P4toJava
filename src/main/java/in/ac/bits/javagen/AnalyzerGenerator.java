@@ -15,6 +15,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.FieldSpec.Builder;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
@@ -29,6 +30,7 @@ public class AnalyzerGenerator {
 
     private List<FieldSpec> headerFields;
     private List<FieldSpec> fields;
+    private List<MethodSpec> methods;
     private String protocol;
     private Header header;
 
@@ -49,17 +51,23 @@ public class AnalyzerGenerator {
     public void generateAnalyzer() {
 
         fields = new ArrayList<FieldSpec>();
+        methods = new ArrayList<MethodSpec>();
 
         String className = setClassName();
         TypeName eventBus = generateFields();
-        MethodSpec configure = generateConfigureMethod(eventBus);
 
+        // add configure method
+        generateConfigure(eventBus);
         // add startByte method
-        MethodSpec setStartByte = generateStartByte();
+        generateStartByte();
+        // add endByte method
+        generateEndByte();
+        // add publishTypedetectionevent method
+        generatePublish();
 
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC).addFields(fields)
-                .addMethod(configure).addMethod(setStartByte).build();
+                .addMethods(methods).build();
 
         JavaFile javaFile = JavaFile
                 .builder(header.getPackageName(), analyzerClass).build();
@@ -76,7 +84,41 @@ public class AnalyzerGenerator {
         }
     }
 
-    private MethodSpec generateStartByte() {
+    private void generatePublish() {
+        ClassName ptdEvent = ClassName.get(
+                "in.ac.bits.protocolanalyzer.analyzer.event",
+                "PacketTypeDetectionEvent");
+
+        ParameterSpec npt = ParameterSpec
+                .builder(String.class, "nextPacketType").build();
+        ParameterSpec sb = ParameterSpec.builder(int.class, "startByte")
+                .build();
+        ParameterSpec eb = ParameterSpec.builder(int.class, "endByte").build();
+        MethodSpec method = MethodSpec
+                .methodBuilder("publishTypeDetectionEvent").addParameter(npt)
+                .addParameter(sb).addParameter(eb)
+                .addStatement("this.eventBus.post(new $T($N, $N, $N))",
+                        ptdEvent, npt, sb, eb)
+                .addModifiers(Modifier.PUBLIC).build();
+        methods.add(method);
+    }
+
+    private void generateEndByte() {
+        ClassName packetWrapper = ClassName
+                .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
+
+        ClassName hClass = ClassName.get(header.getPackageName(),
+                headerClass.name);
+        MethodSpec eb = MethodSpec.methodBuilder("setEndByte")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(packetWrapper, "packetWrapper")
+                .addStatement("this.endByte = packetWrapper.getEndByte()")
+                .build();
+
+        methods.add(eb);
+    }
+
+    private void generateStartByte() {
 
         FieldSpec totalLen = headerFields.get(headerFields.size() - 1);
 
@@ -93,19 +135,29 @@ public class AnalyzerGenerator {
                         hClass)
                 .build();
 
-        return sb;
+        methods.add(sb);
     }
 
-    private MethodSpec generateConfigureMethod(TypeName eventBus) {
+    private void generateConfigure(TypeName eventBus) {
         MethodSpec configure = MethodSpec.methodBuilder("configure")
                 .addParameter(eventBus, "eventBus")
                 .addStatement("this.eventBus = eventBus")
                 .addStatement("this.eventBus.register(this)")
                 .addModifiers(Modifier.PUBLIC).build();
-        return configure;
+        methods.add(configure);
     }
 
     private TypeName generateFields() {
+
+        ClassName protocolClass = ClassName
+                .get("in.ac.bits.protocolanalyzer.protocol", "Protocol");
+        FieldSpec relPkt = FieldSpec
+                .builder(String.class, "PACKET_TYPE_OF_RELEVANCE")
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$T." + protocol.toUpperCase(), protocolClass)
+                .build();
+        fields.add(relPkt);
+
         ClassName repoClass = ClassName.get(
                 "in.ac.bits.protocolanalyzer.persistence.repository",
                 "AnalysisRepository");
@@ -124,7 +176,7 @@ public class AnalyzerGenerator {
         fields.add(eb);
 
         FieldSpec headerBytes = FieldSpec
-                .builder(byte[].class, protocol.toLowerCase() + "header")
+                .builder(byte[].class, protocol.toLowerCase() + "Header")
                 .addModifiers(Modifier.PRIVATE).build();
         fields.add(headerBytes);
         FieldSpec startByte = FieldSpec.builder(int.class, "startByte")
