@@ -23,6 +23,12 @@ public class HeaderClassGenerator {
     private String path;
     private String packageName;
 
+    private TypeSpec genClass;
+
+    public TypeSpec getHeaderClass() {
+        return this.genClass;
+    }
+
     public void setPackageName(String packageName) {
         this.packageName = packageName;
     }
@@ -58,6 +64,8 @@ public class HeaderClassGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        this.genClass = headerClass;
         return this.fieldSpecs;
     }
 

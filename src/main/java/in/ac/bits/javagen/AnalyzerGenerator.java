@@ -32,25 +32,34 @@ public class AnalyzerGenerator {
     private String protocol;
     private Header header;
 
+    private TypeSpec headerClass;
+
     private static final String classNameSuffix = "Analyzer";
 
-    private String setClassName(String protocol) {
+    private void capitalizeProtocol() {
         String firstChar = String.valueOf(protocol.charAt(0)).toUpperCase();
         protocol = protocol.replace(protocol.charAt(0), firstChar.charAt(0));
+    }
+
+    private String setClassName() {
+        capitalizeProtocol();
         return protocol + classNameSuffix;
     }
 
-    public void generateAnalyzer(Header header) {
+    public void generateAnalyzer() {
 
         fields = new ArrayList<FieldSpec>();
 
-        String className = setClassName(protocol);
+        String className = setClassName();
         TypeName eventBus = generateFields();
         MethodSpec configure = generateConfigureMethod(eventBus);
 
+        // add startByte method
+        MethodSpec setStartByte = generateStartByte();
+
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC).addFields(fields)
-                .addMethod(configure).build();
+                .addMethod(configure).addMethod(setStartByte).build();
 
         JavaFile javaFile = JavaFile
                 .builder(header.getPackageName(), analyzerClass).build();
@@ -65,6 +74,26 @@ public class AnalyzerGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private MethodSpec generateStartByte() {
+
+        FieldSpec totalLen = headerFields.get(headerFields.size() - 1);
+
+        ClassName packetWrapper = ClassName
+                .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
+
+        ClassName hClass = ClassName.get(header.getPackageName(),
+                headerClass.name);
+        MethodSpec sb = MethodSpec.methodBuilder("setStartByte")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(packetWrapper, "packetWrapper")
+                .addStatement(
+                        "this.startByte = packetWrapper.getStartByte() + $T.TOTAL_HEADER_LENGTH",
+                        hClass)
+                .build();
+
+        return sb;
     }
 
     private MethodSpec generateConfigureMethod(TypeName eventBus) {

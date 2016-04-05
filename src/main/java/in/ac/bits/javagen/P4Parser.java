@@ -97,6 +97,8 @@ public class P4Parser {
     public void generateAnalyzerClass() {
         analyzerGenerator.setHeaderFields(generatedFields);
         analyzerGenerator.setProtocol(header.getProtocol());
-        analyzerGenerator.generateAnalyzer(header);
+        analyzerGenerator.setHeaderClass(headerGenerator.getHeaderClass());
+        analyzerGenerator.setHeader(header);
+        analyzerGenerator.generateAnalyzer();
     }
 }
