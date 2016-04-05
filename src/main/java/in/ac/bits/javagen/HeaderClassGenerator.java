@@ -74,6 +74,14 @@ public class HeaderClassGenerator {
             FieldSpec fieldName = fieldBuilder.initializer("$L", offset)
                     .build();
             fieldSpecs.add(fieldName);
+
+            // add start byte
+            fieldBuilder = FieldSpec
+                    .builder(int.class, field.toUpperCase() + "_START_BYTE")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC,
+                            Modifier.FINAL);
+            fieldName = fieldBuilder.initializer("$L", offset / 8).build();
+            fieldSpecs.add(fieldName);
             offset += startBits.get(index);
 
             // add end bit
@@ -81,7 +89,16 @@ public class HeaderClassGenerator {
                     .builder(int.class, field.toUpperCase() + "_END_BIT")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC,
                             Modifier.FINAL);
-            fieldName = fieldBuilder.initializer("$L", offset-1).build();
+            fieldName = fieldBuilder.initializer("$L", offset - 1).build();
+            fieldSpecs.add(fieldName);
+
+            // add end byte
+            fieldBuilder = FieldSpec
+                    .builder(int.class, field.toUpperCase() + "_END_BYTE")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC,
+                            Modifier.FINAL);
+            fieldName = fieldBuilder.initializer("$L", (offset - 1) / 8)
+                    .build();
             fieldSpecs.add(fieldName);
             index++;
         }
