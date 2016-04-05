@@ -35,7 +35,7 @@ public class HeaderClassGenerator {
         this.path = path;
     }
 
-    public void generateHeaderClass(List<String> fields,
+    public List<FieldSpec> generateHeaderClass(List<String> fields,
             List<Integer> startBits, int offset) {
 
         fieldSpecs = new ArrayList<FieldSpec>();
@@ -58,6 +58,7 @@ public class HeaderClassGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return this.fieldSpecs;
     }
 
     private void addFields(List<String> fields, List<Integer> startBits,
