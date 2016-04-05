@@ -47,8 +47,8 @@
 	</div>
 
 	<div>
-		<h4>Enter class name:</h4>
-		<input type="text" id="className">
+		<h4>Enter protocol name:</h4>
+		<input type="text" id="protocol">
 	</div>
 
 	<div>
@@ -76,7 +76,7 @@
 									var userParseGraph = e.target.result;
 									var formValues = {
 										headerString : userParseGraph,
-										className : $("#className").val(),
+										protocol : $("#protocol").val(),
 										path : $("#path").val(),
 										packageName : $("#packageName").val()
 									};

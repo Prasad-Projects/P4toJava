@@ -14,14 +14,18 @@ import in.ac.bits.javagen.mvc.Header;
 public class P4Parser {
 
     @Autowired
-    private HeaderClassGenerator generator;
+    private HeaderClassGenerator headerGenerator;
+
+    @Autowired
+    private AnalyzerGenerator analyzerGenerator;
 
     private ArrayList<String> headerLines;
-
     private List<String> fieldList;
     private List<Integer> startBits;
 
     private List<FieldSpec> generatedFields;
+
+    private Header header;
 
     public void setGeneratedFields(List<FieldSpec> fields) {
         generatedFields = fields;
@@ -29,8 +33,9 @@ public class P4Parser {
 
     public void generateHeaderClass(Header header) {
 
+        this.header = header;
         String headerString = header.getHeaderString();
-        String className = header.getClassName();
+        String className = header.getProtocol() + "Header";
         String path = header.getPath();
         String packageName = header.getPackageName();
 
@@ -44,7 +49,8 @@ public class P4Parser {
         int linePtr = 0;
         linePtr = getToFields(linePtr);
 
-        while (!headerLines.get(linePtr).contains("}") && linePtr < headerLines.size()) {
+        while (!headerLines.get(linePtr).contains("}")
+                && linePtr < headerLines.size()) {
             String fieldLine = headerLines.get(linePtr);
             String[] tokens = fieldLine.split(":");
             String[] subtokens = tokens[1].split(";");
@@ -54,13 +60,16 @@ public class P4Parser {
             startBits.add(startBit);
             linePtr++;
         }
-        generator.setClassName(className);
-        generator.setPackageName(packageName);
-        generator.setPath(path);
-        List<FieldSpec> fields = generator.generateHeaderClass(fieldList,
+        headerGenerator.setClassName(className);
+        headerGenerator.setPackageName(packageName);
+        headerGenerator.setPath(path);
+        List<FieldSpec> fields = headerGenerator.generateHeaderClass(fieldList,
                 startBits, 0);
 
-        // save the list of generated fields
+        /*
+         * save the list of generated fields to be used for generating analyzer
+         * class
+         */
         setGeneratedFields(fields);
 
     }
@@ -83,5 +92,11 @@ public class P4Parser {
                 headerLines.add(lines[i].trim());
             }
         }
+    }
+
+    public void generateAnalyzerClass() {
+        analyzerGenerator.setHeaderFields(generatedFields);
+        analyzerGenerator.setProtocol(header.getProtocol());
+        analyzerGenerator.generateAnalyzer(header);
     }
 }

@@ -35,11 +35,12 @@ public class MainController {
     public @ResponseBody String readFile(@RequestBody Header header,
             HttpServletRequest request) {
         String status = "success";
-        System.out.println("class = " + header.getClassName());
+        System.out.println("class = " + header.getProtocol());
         System.out.println("path = " + header.getPath());
         System.out.println("package = " + header.getPackageName());
         System.out.println("Status = " + status);
         parser.generateHeaderClass(header);
+        parser.generateAnalyzerClass();
         return status;
     }
 

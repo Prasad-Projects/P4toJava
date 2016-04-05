@@ -8,7 +8,7 @@ import lombok.Setter;
 public class Header {
 
     private String headerString;
-    private String className;
+    private String protocol;
     private String path;
     private String packageName;
 }
