@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.lang.model.element.Modifier;
 
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.FieldSpec.Builder;
 import com.squareup.javapoet.JavaFile;
@@ -32,7 +35,7 @@ public class AnalyzerGenerator {
 
     private List<FieldSpec> headerVars;
     private List<String> headerFields;
-    private List<FieldSpec> fields;
+    private Map<String, FieldSpec> fieldMap;
     private List<MethodSpec> methods;
     private String protocol;
     private Header header;
@@ -54,7 +57,7 @@ public class AnalyzerGenerator {
 
     public void generateAnalyzer() {
 
-        fields = new ArrayList<FieldSpec>();
+        fieldMap = new HashMap<String, FieldSpec>();
         methods = new ArrayList<MethodSpec>();
 
         String className = setClassName();
@@ -73,6 +76,7 @@ public class AnalyzerGenerator {
         // generate getter methods
         generateGetters();
 
+        List<FieldSpec> fields = new ArrayList<FieldSpec>(fieldMap.values());
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC).addFields(fields)
                 .addMethods(methods).build();
@@ -136,11 +140,47 @@ public class AnalyzerGenerator {
         ClassName packetWrapper = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
 
+        ParameterSpec pw = ParameterSpec.builder(packetWrapper, "packetWrapper")
+                .build();
+        CodeBlock setNPublish = setNPublisher();
+        CodeBlock setEntity = entitySetter();
+        CodeBlock setQuery = querySetter();
         MethodSpec method = MethodSpec.methodBuilder("analyze")
                 .addAnnotation(subann)
-                .addParameter(packetWrapper, "packetWrapper")
-                .addModifiers(Modifier.PUBLIC).build();
+                .addParameter(pw)
+                .beginControlFlow(
+                        "if ($N.equalsIgnoreCase($N.getPacketType()))",
+                        fieldMap.get("relPkt"), pw)
+                /*.addCode(setNPublish)
+                .addCode(setEntity)*/
+                .addCode(setQuery)
+                .endControlFlow().addModifiers(Modifier.PUBLIC).build();
         methods.add(method);
+    }
+
+    private CodeBlock setNPublisher() {
+        CodeBlock cb = CodeBlock.builder()
+                .build();
+        return cb;
+    }
+
+    private CodeBlock entitySetter() {
+        CodeBlock cb = CodeBlock.builder()
+                .build();
+        return cb;
+    }
+
+    private CodeBlock querySetter() {
+
+        ClassName indexQuery = ClassName.get(
+                "org.springframework.data.elasticsearch.core.query",
+                "IndexQuery");
+
+        CodeBlock cb = CodeBlock.builder()
+                .addStatement("$T query = new $T()", indexQuery, indexQuery)
+                .addStatement("query.setObject(entity)")
+                .addStatement("$N.save(query)", fieldMap.get("repo")).build();
+        return cb;
     }
 
     private void generatePublish() {
@@ -215,7 +255,7 @@ public class AnalyzerGenerator {
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .initializer("$T." + protocol.toUpperCase(), protocolClass)
                 .build();
-        fields.add(relPkt);
+        fieldMap.put("relPkt", relPkt);
 
         ClassName repoClass = ClassName.get(
                 "in.ac.bits.protocolanalyzer.persistence.repository",
@@ -224,7 +264,7 @@ public class AnalyzerGenerator {
                 .builder(repoClass.topLevelClassName(), "repository")
                 .addAnnotation(Autowired.class).addModifiers(Modifier.PRIVATE);
         FieldSpec repo = repoBuilder.build();
-        fields.add(repo);
+        fieldMap.put("repo", repo);
 
         ClassName ebClass = ClassName.get("com.google.common.eventbus",
                 "EventBus");
@@ -232,18 +272,18 @@ public class AnalyzerGenerator {
                 .builder(ebClass.topLevelClassName(), "eventBus")
                 .addModifiers(Modifier.PRIVATE);
         FieldSpec eb = eventbusBuilder.build();
-        fields.add(eb);
+        fieldMap.put("eb", eb);
 
         FieldSpec headerBytes = FieldSpec
                 .builder(byte[].class, protocol.toLowerCase() + "Header")
                 .addModifiers(Modifier.PRIVATE).build();
-        fields.add(headerBytes);
+        fieldMap.put("headerBytes", headerBytes);
         FieldSpec startByte = FieldSpec.builder(int.class, "startByte")
                 .addModifiers(Modifier.PRIVATE).build();
-        fields.add(startByte);
+        fieldMap.put("startByte", startByte);
         FieldSpec endByte = FieldSpec.builder(int.class, "endByte")
                 .addModifiers(Modifier.PRIVATE).build();
-        fields.add(endByte);
+        fieldMap.put("endByte", endByte);
 
         return ebClass.topLevelClassName();
     }
