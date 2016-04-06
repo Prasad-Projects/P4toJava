@@ -94,26 +94,36 @@ public class AnalyzerGenerator {
 
     private void generateGetters() {
 
-        int count = 0;
+        int fieldIndex = 0;
         for (String field : headerFields) {
             field = capitalize(field);
             ParameterSpec headerParam = ParameterSpec
                     .builder(byte[].class, protocol.toLowerCase() + "Header")
                     .build();
+            @SuppressWarnings("rawtypes")
+            Class returnType = determineReturnType(fieldIndex);
             MethodSpec method = MethodSpec.methodBuilder("get" + field)
                     .addModifiers(Modifier.PUBLIC).addParameter(headerParam)
                     .addStatement("$T " + field.toLowerCase()
                             + " = $T.copyOfRange($N, " + protocol + "Header."
-                            + headerVars.get(4 * count + 1).name + ", "
+                            + headerVars.get(4 * fieldIndex + 1).name + ", "
                             + protocol + "Header."
-                            + headerVars.get(4 * count + 3).name + " + 1)",
+                            + headerVars.get(4 * fieldIndex + 3).name + " + 1)",
                             byte[].class, Arrays.class, headerParam)
                     .addStatement("return " + field.toLowerCase())
-                    .returns(byte[].class)
-                    .build();
+                    .returns(returnType).build();
             methods.add(method);
-            count++;
+            fieldIndex++;
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Class determineReturnType(int fieldIndex) {
+        FieldSpec startBitField = headerVars.get(4 * fieldIndex);
+        FieldSpec endBitField = headerVars.get(4 * fieldIndex + 2);
+        int startBit = Integer.parseInt(startBitField.initializer.toString());
+        int endBit = Integer.parseInt(endBitField.initializer.toString());
+        return ReturnType.getReturnType(endBit - startBit + 1);
     }
 
     private void generateAnalyze() {
