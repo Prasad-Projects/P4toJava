@@ -31,7 +31,11 @@ import lombok.Setter;
 @Setter
 @Getter
 @Component
+@SuppressWarnings("restriction")
 public class AnalyzerGenerator {
+
+    @Autowired
+    private EntityGenrator entityGenerator;
 
     private List<FieldSpec> headerVars;
     private List<String> headerFields;
@@ -39,6 +43,7 @@ public class AnalyzerGenerator {
     private List<MethodSpec> methods;
     private String protocol;
     private Header header;
+    private Map<String, Class> headerFieldTypeMap;
 
     private TypeSpec headerClass;
 
@@ -71,10 +76,10 @@ public class AnalyzerGenerator {
         generateEndByte();
         // add publishTypedetectionevent method
         generatePublish();
-        // add analyze method
-        generateAnalyze();
         // generate getter methods
         generateGetters();
+        // add analyze method
+        generateAnalyze();
 
         List<FieldSpec> fields = new ArrayList<FieldSpec>(fieldMap.values());
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
@@ -98,6 +103,7 @@ public class AnalyzerGenerator {
 
     private void generateGetters() {
 
+        headerFieldTypeMap = new HashMap<String, Class>();
         int fieldIndex = 0;
         for (String field : headerFields) {
             field = capitalize(field);
@@ -117,6 +123,7 @@ public class AnalyzerGenerator {
                     .addStatement("return " + field.toLowerCase())
                     .returns(returnType).build();
             methods.add(method);
+            headerFieldTypeMap.put(field, returnType);
             fieldIndex++;
         }
     }
@@ -146,27 +153,47 @@ public class AnalyzerGenerator {
         CodeBlock setEntity = entitySetter();
         CodeBlock setQuery = querySetter();
         MethodSpec method = MethodSpec.methodBuilder("analyze")
-                .addAnnotation(subann)
-                .addParameter(pw)
+                .addAnnotation(subann).addParameter(pw)
                 .beginControlFlow(
                         "if ($N.equalsIgnoreCase($N.getPacketType()))",
                         fieldMap.get("relPkt"), pw)
-                /*.addCode(setNPublish)
-                .addCode(setEntity)*/
-                .addCode(setQuery)
-                .endControlFlow().addModifiers(Modifier.PUBLIC).build();
+                /*
+                 * .addCode(setNPublish) .addCode(setEntity)
+                 */
+                .addCode(setEntity).addCode(setQuery).endControlFlow()
+                .addModifiers(Modifier.PUBLIC).build();
         methods.add(method);
     }
 
     private CodeBlock setNPublisher() {
-        CodeBlock cb = CodeBlock.builder()
-                .build();
+        CodeBlock cb = CodeBlock.builder().build();
         return cb;
     }
 
     private CodeBlock entitySetter() {
-        CodeBlock cb = CodeBlock.builder()
-                .build();
+        // set the entity class first
+        String entityPkgName = "in.ac.bits.protocolanalyzer.persistence.entity";
+        entityGenerator.setHeader(header);
+        entityGenerator.setProtocol(protocol);
+        entityGenerator.setHeaderFieldTypeMap(headerFieldTypeMap);
+        entityGenerator.setPackageName(entityPkgName);
+        List<FieldSpec> fields = entityGenerator.generateEntity();
+        ClassName entityClass = ClassName.get(entityPkgName,
+                protocol + "Entity");
+
+        com.squareup.javapoet.CodeBlock.Builder cbuilder = CodeBlock.builder();
+        cbuilder.addStatement("$T entity = new $T()", entityClass, entityClass);
+        cbuilder.addStatement("entity.set" + capitalize(fields.get(0).name)
+                + "(packetWrapper.getPacketId())");
+        if (fields.size() > 1) {
+            for (int i = 1; i < fields.size(); i++) {
+                cbuilder.addStatement(
+                        "entity.set" + capitalize(fields.get(i).name) + "(get"
+                                + capitalize(fields.get(i).name) + "("
+                                + protocol.toLowerCase() + "Header))");
+            }
+        }
+        CodeBlock cb = cbuilder.build();
         return cb;
     }
 
@@ -206,8 +233,6 @@ public class AnalyzerGenerator {
         ClassName packetWrapper = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
 
-        ClassName hClass = ClassName.get(header.getPackageName(),
-                headerClass.name);
         MethodSpec eb = MethodSpec.methodBuilder("setEndByte")
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(packetWrapper, "packetWrapper")
@@ -218,8 +243,6 @@ public class AnalyzerGenerator {
     }
 
     private void generateStartByte() {
-
-        FieldSpec totalLen = headerVars.get(headerVars.size() - 1);
 
         ClassName packetWrapper = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
