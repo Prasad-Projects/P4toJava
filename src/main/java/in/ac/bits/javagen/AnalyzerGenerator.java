@@ -3,6 +3,7 @@ package in.ac.bits.javagen;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.lang.model.element.Modifier;
@@ -10,6 +11,7 @@ import javax.lang.model.element.Modifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.FieldSpec.Builder;
@@ -28,7 +30,8 @@ import lombok.Setter;
 @Component
 public class AnalyzerGenerator {
 
-    private List<FieldSpec> headerFields;
+    private List<FieldSpec> headerVars;
+    private List<String> headerFields;
     private List<FieldSpec> fields;
     private List<MethodSpec> methods;
     private String protocol;
@@ -38,13 +41,14 @@ public class AnalyzerGenerator {
 
     private static final String classNameSuffix = "Analyzer";
 
-    private void capitalizeProtocol() {
-        String firstChar = String.valueOf(protocol.charAt(0)).toUpperCase();
-        protocol = protocol.replace(protocol.charAt(0), firstChar.charAt(0));
+    private String capitalize(String str) {
+        String firstChar = String.valueOf(str.charAt(0)).toUpperCase();
+        str = str.replaceFirst(String.valueOf(str.charAt(0)), firstChar);
+        return str;
     }
 
     private String setClassName() {
-        capitalizeProtocol();
+        protocol = capitalize(protocol);
         return protocol + classNameSuffix;
     }
 
@@ -64,6 +68,10 @@ public class AnalyzerGenerator {
         generateEndByte();
         // add publishTypedetectionevent method
         generatePublish();
+        // add analyze method
+        generateAnalyze();
+        // generate getter methods
+        generateGetters();
 
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC).addFields(fields)
@@ -82,6 +90,47 @@ public class AnalyzerGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void generateGetters() {
+
+        int count = 0;
+        for (String field : headerFields) {
+            field = capitalize(field);
+            ParameterSpec headerParam = ParameterSpec
+                    .builder(byte[].class, protocol.toLowerCase() + "Header")
+                    .build();
+            MethodSpec method = MethodSpec.methodBuilder("get" + field)
+                    .addModifiers(Modifier.PUBLIC).addParameter(headerParam)
+                    .addStatement("$T " + field.toLowerCase()
+                            + " = $T.copyOfRange($N, " + protocol + "Header."
+                            + headerVars.get(4 * count + 1).name + ", "
+                            + protocol + "Header."
+                            + headerVars.get(4 * count + 3).name + " + 1)",
+                            byte[].class, Arrays.class, headerParam)
+                    .addStatement("return " + field.toLowerCase())
+                    .returns(byte[].class)
+                    .build();
+            methods.add(method);
+            count++;
+        }
+    }
+
+    private void generateAnalyze() {
+
+        // subscribe
+        ClassName sub = ClassName.get("com.google.common.eventbus",
+                "Subscribe");
+        AnnotationSpec subann = AnnotationSpec.builder(sub).build();
+
+        ClassName packetWrapper = ClassName
+                .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
+
+        MethodSpec method = MethodSpec.methodBuilder("analyze")
+                .addAnnotation(subann)
+                .addParameter(packetWrapper, "packetWrapper")
+                .addModifiers(Modifier.PUBLIC).build();
+        methods.add(method);
     }
 
     private void generatePublish() {
@@ -120,7 +169,7 @@ public class AnalyzerGenerator {
 
     private void generateStartByte() {
 
-        FieldSpec totalLen = headerFields.get(headerFields.size() - 1);
+        FieldSpec totalLen = headerVars.get(headerVars.size() - 1);
 
         ClassName packetWrapper = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
