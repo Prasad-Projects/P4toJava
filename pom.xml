@@ -82,6 +82,12 @@
 			<version>1.16.6</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Apache common utils -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>p4toJava</finalName>
