@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.lang.model.element.Modifier;
 
@@ -36,6 +37,9 @@ public class AnalyzerGenerator {
 
     @Autowired
     private EntityGenrator entityGenerator;
+
+    @Autowired
+    private GraphParser graphParser;
 
     private List<FieldSpec> headerVars;
     private List<String> headerFields;
@@ -82,6 +86,8 @@ public class AnalyzerGenerator {
         generateGetters();
         // add analyze method
         generateAnalyze();
+        // add next protocol detector
+        generateNPType();
 
         List<FieldSpec> fields = new ArrayList<FieldSpec>(fieldMap.values());
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
@@ -137,6 +143,37 @@ public class AnalyzerGenerator {
         int startBit = Integer.parseInt(startBitField.initializer.toString());
         int endBit = Integer.parseInt(endBitField.initializer.toString());
         return ReturnType.getReturnType(endBit - startBit + 1);
+    }
+
+    private void generateNPType() {
+        graphParser.setHeader(header);
+        graphParser.parse(header.getGraphString());
+
+        CodeBlock cases = buildCases();
+
+        MethodSpec method = MethodSpec.methodBuilder("setNextProtocolType")
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("$T nextHeaderType = ", String.class)
+                .beginControlFlow("switch(nextHeaderType)").addCode(cases)
+                .endControlFlow().returns(String.class).build();
+
+        methods.add(method);
+    }
+
+    private CodeBlock buildCases() {
+        com.squareup.javapoet.CodeBlock.Builder cbuilder = CodeBlock.builder();
+        String conditionalHeader = graphParser.getConditionalHeaderField();
+        if (!conditionalHeader.equalsIgnoreCase("NULL")) {
+            for (Entry<String, String> entry : graphParser.getValProtocols()
+                    .entrySet()) {
+                cbuilder.addStatement(
+                        "case \"" + entry.getKey() + "\"" + ": return Protocol."
+                                + entry.getValue().toUpperCase());
+            }
+        }
+        cbuilder.addStatement("default: return Protocol.END_PROTOCOL");
+        CodeBlock cb = cbuilder.build();
+        return cb;
     }
 
     private void generateAnalyze() {

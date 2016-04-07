@@ -1,6 +1,8 @@
 package in.ac.bits.javagen;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,12 +21,16 @@ public class GraphParser {
     @Getter
     private String conditionalHeaderField;
 
+    @Getter
+    private Map<String, String> valProtocols;
+
     @Setter
     private Header header;
 
     public void parse(String graphString) {
 
         graphLines = new ArrayList<String>();
+        valProtocols = new HashMap<String, String>();
 
         String[] lines = graphString.split("\\r?\\n");
         removeBlankLines(lines);
@@ -50,10 +56,31 @@ public class GraphParser {
         if (protocolPtr > 0) {
             setCondition(protocolPtr);
             System.out.println("Conditional header =" + conditionalHeaderField);
+            protocolPtr++;
+            while (StringUtils.containsIgnoreCase(graphLines.get(protocolPtr),
+                    "case")) {
+                addCases(protocolPtr);
+                protocolPtr++;
+            }
         } else {
+            conditionalHeaderField = "NULL";
             System.out.println("No switch statement!!");
         }
 
+    }
+
+    private void addCases(int protocolPtr) {
+        String[] tokens = graphLines.get(protocolPtr).split(":");
+        System.out.println("tokens[0] = " + tokens[0]);
+        String[] caseVal = tokens[0].trim().split("\\s");
+        for (int i = 0; i < caseVal.length; i++) {
+            System.out.println("Caseval " + i + "=" + caseVal[i]);
+        }
+        String protocol = tokens[1].trim();
+        protocol = protocol.substring(0, protocol.length() - 1);
+        System.out.println("Adding to valprotocol: {" + caseVal[1].trim() + "="
+                + protocol + "}");
+        valProtocols.put(caseVal[1].trim(), protocol);
     }
 
     private int hopswitch(int protocolPtr) {
@@ -87,7 +114,7 @@ public class GraphParser {
 
     private int hopGraph(int linePtr) {
         int size = graphLines.size();
-        int ptr = size -1;
+        int ptr = size - 1;
         while (linePtr < size) {
             if (!StringUtils.containsIgnoreCase(graphLines.get(linePtr),
                     "graph")) {
