@@ -8,6 +8,7 @@ import lombok.Setter;
 public class Header {
 
     private String headerString;
+    private String graphString;
     private String protocol;
     private String path;
     private String packageName;
