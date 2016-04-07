@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Header {
+public class Input {
 
     private String headerString;
     private String graphString;

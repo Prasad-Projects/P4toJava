@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.squareup.javapoet.FieldSpec;
 
-import in.ac.bits.javagen.mvc.Header;
+import in.ac.bits.javagen.mvc.Input;
 
 @Component
 public class P4Parser {
@@ -25,19 +25,19 @@ public class P4Parser {
 
     private List<FieldSpec> generatedFields;
 
-    private Header header;
+    private Input input;
 
     private void setGeneratedFields(List<FieldSpec> fields) {
         generatedFields = fields;
     }
 
-    public void generateHeaderClass(Header header) {
+    public void generateHeaderClass(Input input) {
 
-        this.header = header;
-        String headerString = header.getHeaderString();
-        String className = header.getProtocol() + "Header";
-        String path = header.getPath();
-        String packageName = header.getPackageName();
+        this.input = input;
+        String headerString = input.getHeaderString();
+        String className = input.getProtocol() + "Header";
+        String path = input.getPath();
+        String packageName = input.getPackageName();
 
         fieldList = new ArrayList<String>();
         startBits = new ArrayList<Integer>();
@@ -97,9 +97,9 @@ public class P4Parser {
     public void generateAnalyzerClass() {
         analyzerGenerator.setHeaderVars(generatedFields);
         analyzerGenerator.setHeaderFields(fieldList);
-        analyzerGenerator.setProtocol(header.getProtocol());
+        analyzerGenerator.setProtocol(input.getProtocol());
         analyzerGenerator.setHeaderClass(headerGenerator.getHeaderClass());
-        analyzerGenerator.setHeader(header);
+        analyzerGenerator.setInput(input);
         analyzerGenerator.generateAnalyzer();
     }
 }

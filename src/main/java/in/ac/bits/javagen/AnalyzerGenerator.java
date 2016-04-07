@@ -25,7 +25,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-import in.ac.bits.javagen.mvc.Header;
+import in.ac.bits.javagen.mvc.Input;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,7 +47,7 @@ public class AnalyzerGenerator {
     private List<MethodSpec> methods;
     private Map<String, MethodSpec> getters;
     private String protocol;
-    private Header header;
+    private Input input;
     private Map<String, Class> headerFieldTypeMap;
 
     private TypeSpec headerClass;
@@ -96,8 +96,8 @@ public class AnalyzerGenerator {
                 .addMethods(methods).build();
 
         JavaFile javaFile = JavaFile
-                .builder(header.getPackageName(), analyzerClass).build();
-        File file = new File(header.getPath());
+                .builder(input.getPackageName(), analyzerClass).build();
+        File file = new File(input.getPath());
 
         try {
             System.out.println(
@@ -149,8 +149,8 @@ public class AnalyzerGenerator {
     }
 
     private void generateNPType() {
-        graphParser.setHeader(header);
-        graphParser.parse(header.getGraphString());
+        graphParser.setInput(input);
+        graphParser.parse(input.getGraphString());
 
         CodeBlock cases = buildCases();
 
@@ -226,7 +226,7 @@ public class AnalyzerGenerator {
     private CodeBlock entitySetter() {
         // set the entity class first
         String entityPkgName = "in.ac.bits.protocolanalyzer.persistence.entity";
-        entityGenerator.setHeader(header);
+        entityGenerator.setInput(input);
         entityGenerator.setProtocol(protocol);
         entityGenerator.setHeaderFieldTypeMap(headerFieldTypeMap);
         entityGenerator.setPackageName(entityPkgName);
@@ -290,7 +290,7 @@ public class AnalyzerGenerator {
         ParameterSpec pw = ParameterSpec.builder(packetWrapper, "packetWrapper")
                 .build();
 
-        ClassName hClass = ClassName.get(header.getPackageName(),
+        ClassName hClass = ClassName.get(input.getPackageName(),
                 headerClass.name);
         MethodSpec method = MethodSpec
                 .methodBuilder("set" + capitalize(protocol) + "Header")
@@ -325,7 +325,7 @@ public class AnalyzerGenerator {
         ClassName packetWrapper = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
 
-        ClassName hClass = ClassName.get(header.getPackageName(),
+        ClassName hClass = ClassName.get(input.getPackageName(),
                 headerClass.name);
         MethodSpec sb = MethodSpec.methodBuilder("setStartByte")
                 .addModifiers(Modifier.PUBLIC)

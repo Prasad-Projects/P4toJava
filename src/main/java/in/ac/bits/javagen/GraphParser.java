@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import in.ac.bits.javagen.mvc.Header;
+import in.ac.bits.javagen.mvc.Input;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,7 +25,7 @@ public class GraphParser {
     private Map<String, String> valProtocols;
 
     @Setter
-    private Header header;
+    private Input input;
 
     public void parse(String graphString) {
 
@@ -43,8 +43,8 @@ public class GraphParser {
             linePtr = hopGraph(linePtr);
             System.out.println("Line pointer now = " + linePtr);
             if (StringUtils.containsIgnoreCase(graphLines.get(linePtr),
-                    header.getProtocol())) {
-                System.out.println("The protocol " + header.getProtocol()
+                    input.getProtocol())) {
+                System.out.println("The protocol " + input.getProtocol()
                         + " is on the line: " + linePtr);
                 protocolPtr = linePtr;
                 break;

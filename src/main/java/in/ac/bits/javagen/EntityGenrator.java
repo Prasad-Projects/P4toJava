@@ -17,7 +17,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
-import in.ac.bits.javagen.mvc.Header;
+import in.ac.bits.javagen.mvc.Input;
 import lombok.Setter;
 
 @Component
@@ -32,7 +32,7 @@ public class EntityGenrator {
     private String packageName;
 
     @Setter
-    private Header header;
+    private Input input;
 
     @Setter
     private Map<String, Class> headerFieldTypeMap;
@@ -63,7 +63,7 @@ public class EntityGenrator {
                 .build();
 
         JavaFile javaFile = JavaFile.builder(packageName, entityClass).build();
-        File file = new File(header.getPath());
+        File file = new File(input.getPath());
 
         try {
             System.out.println(

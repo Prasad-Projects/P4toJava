@@ -32,15 +32,15 @@ public class MainController {
     }
 
     @RequestMapping(value = "read", method = RequestMethod.POST)
-    public @ResponseBody String readFile(@RequestBody Header header,
+    public @ResponseBody String readFile(@RequestBody Input input,
             HttpServletRequest request) {
         String status = "success";
-        System.out.println("Header string: \n" + header.getHeaderString());
-        System.out.println("class = " + header.getProtocol());
-        System.out.println("path = " + header.getPath());
-        System.out.println("package = " + header.getPackageName());
+        System.out.println("Header string: \n" + input.getHeaderString());
+        System.out.println("class = " + input.getProtocol());
+        System.out.println("path = " + input.getPath());
+        System.out.println("package = " + input.getPackageName());
         System.out.println("Status = " + status);
-        parser.generateHeaderClass(header);
+        parser.generateHeaderClass(input);
         parser.generateAnalyzerClass();
         return status;
     }
