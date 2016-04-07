@@ -45,6 +45,7 @@ public class AnalyzerGenerator {
     private List<String> headerFields;
     private Map<String, FieldSpec> fieldMap;
     private List<MethodSpec> methods;
+    private Map<String, MethodSpec> getters;
     private String protocol;
     private Header header;
     private Map<String, Class> headerFieldTypeMap;
@@ -112,6 +113,7 @@ public class AnalyzerGenerator {
     private void generateGetters() {
 
         headerFieldTypeMap = new HashMap<String, Class>();
+        getters = new HashMap<String, MethodSpec>();
         int fieldIndex = 0;
         for (String field : headerFields) {
             field = capitalize(field);
@@ -132,6 +134,7 @@ public class AnalyzerGenerator {
                     .returns(returnType).build();
             methods.add(method);
             headerFieldTypeMap.put(field, returnType);
+            getters.put(field.toLowerCase(), method);
             fieldIndex++;
         }
     }
@@ -151,9 +154,15 @@ public class AnalyzerGenerator {
 
         CodeBlock cases = buildCases();
 
+        String val = "\"NO_CONDITIONAL_HEADER_FIELD\"";
+        if (!graphParser.getConditionalHeaderField().equalsIgnoreCase("NULL")) {
+            MethodSpec getter = getters
+                    .get(graphParser.getConditionalHeaderField());
+            val = getter.name + "(this." + protocol.toLowerCase() + "Header)";
+        }
         MethodSpec method = MethodSpec.methodBuilder("setNextProtocolType")
                 .addModifiers(Modifier.PUBLIC)
-                .addStatement("$T nextHeaderType = ", String.class)
+                .addStatement("$T nextHeaderType = " + val, String.class)
                 .beginControlFlow("switch(nextHeaderType)").addCode(cases)
                 .endControlFlow().returns(String.class).build();
 
