@@ -64,73 +64,80 @@
 	</div>
 	<!-- <button id="genHello">Press to Generate</button> -->
 
-	<form accept-charset="UTF-8" role="form" method="GET"
-		action="<c:url value="/index"/>">
-		<button id="genHello" type="submit">Generate File</button>
-	</form>
+	<%-- <form accept-charset="UTF-8" role="form" method="GET"
+		action="<c:url value="/index"/>"> --%>
+	<button id="genHello" type="submit">Generate File</button>
+	<!-- </form> -->
 
 	<script type="text/javascript">
-		$("#genHello")
-				.click(
-						function() {
+		var p4header;
+		var p4graph;
 
-							//Retrieve the first (and only!) File from the FileList object
-							var f = document.getElementById("fileInput").files[0];
-							var g = document.getElementById("graphInput").files[0];
-							var p4header;
-							var p4graph;
+		function setheader(header) {
+			p4header = header;
+		}
 
-							if (f) {
-								var r = new FileReader();
-								r.onload = function(e) {
-									p4header = e.target.result;
-								}
-								r.readAsText(f);
+		function setgraph(graph) {
+			p4graph = graph;
+		}
+
+		function call() {
+			var formValues = {
+				headerString : p4header,
+				graphString : p4graph,
+				protocol : $("#protocol").val(),
+				path : $("#path").val(),
+				packageName : $("#packageName").val()
+			};
+			$
+					.ajax({
+						url : '/p4tojava/read',
+						type : 'POST',
+						contentType : 'application/json; charset=utf-8',
+						dataType : 'text',
+						data : JSON.stringify(formValues),
+						success : function(data) {
+							if (data === "success") {
+								console.log("Success!")
 							} else {
-								alert("Failed to load header-spec file");
+								alert("Error!!!");
 							}
+						},
+						error : function() {
+							console
+									.log("Something went wrong. Please try again later.");
+						}
+					});
+		}
+		$("#genHello").click(function() {
 
-							if (g) {
-								var r = new FileReader();
-								r.onload = function(e) {
-									p4graph = e.target.result;
-								}
-								debugger
-								r.readAsText(g);
-							} else {
-								alert("Failed to load graph file");
-							}
+			//Retrieve the first (and only!) File from the FileList object
+			var f = document.getElementById("fileInput").files[0];
+			var g = document.getElementById("graphInput").files[0];
 
-							if (f && g) {
-								var formValues = {
-									headerString : p4header,
-									graphString : p4graph,
-									protocol : $("#protocol").val(),
-									path : $("#path").val(),
-									packageName : $("#packageName").val()
-								};
-								$
-										.ajax({
-											url : '/p4tojava/read',
-											type : 'POST',
-											contentType : 'application/json; charset=utf-8',
-											dataType : 'text',
-											data : JSON.stringify(formValues),
-											success : function(data) {
-												if (data === "success") {
-													console.log("Success!")
-												} else {
-													alert("Error!!!");
-												}
-											},
-											error : function() {
-												console
-														.log("Something went wrong. Please try again later.");
-											}
-										});
-							}
+			if (f) {
+				var r = new FileReader();
+				r.onload = function(e) {
+					var p4header = e.target.result;
+					setheader(p4header);
+				}
+				r.readAsText(f);
+			} else {
+				alert("Failed to load header-spec file");
+			}
 
-						});
+			if (g) {
+				var r = new FileReader();
+				r.onload = function(e) {
+					var p4graph = e.target.result;
+					setgraph(p4graph);
+					call();
+				}
+				r.readAsText(g);
+			} else {
+				alert("Failed to load graph file");
+			}
+		});
 	</script>
 </body>
 </html>
