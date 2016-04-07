@@ -35,6 +35,7 @@ public class GraphParser {
         int protocolPtr = -1;
         while (linePtr < graphLines.size()) {
             linePtr = hopGraph(linePtr);
+            System.out.println("Line pointer now = " + linePtr);
             if (StringUtils.containsIgnoreCase(graphLines.get(linePtr),
                     header.getProtocol())) {
                 System.out.println("The protocol " + header.getProtocol()
@@ -45,26 +46,34 @@ public class GraphParser {
                 linePtr++;
             }
         }
+        protocolPtr = hopswitch(protocolPtr);
         if (protocolPtr > 0) {
-            protocolPtr = hopswitch(protocolPtr);
             setCondition(protocolPtr);
             System.out.println("Conditional header =" + conditionalHeaderField);
+        } else {
+            System.out.println("No switch statement!!");
         }
 
     }
 
     private int hopswitch(int protocolPtr) {
-        int size = graphLines.size();
-        while (protocolPtr < size
-                && !graphLines.get(protocolPtr).contains("}")) {
-            if (StringUtils.containsIgnoreCase(graphLines.get(protocolPtr),
-                    "switch")) {
-                break;
-            } else {
-                protocolPtr++;
+        if (protocolPtr < 0) {
+            return protocolPtr;
+        } else {
+            int size = graphLines.size();
+            int lineptr = -1;
+            while (protocolPtr < size
+                    && !graphLines.get(protocolPtr).contains("}")) {
+                if (StringUtils.containsIgnoreCase(graphLines.get(protocolPtr),
+                        "switch")) {
+                    lineptr = protocolPtr;
+                    break;
+                } else {
+                    protocolPtr++;
+                }
             }
+            return lineptr;
         }
-        return protocolPtr;
     }
 
     private void setCondition(int linePtr) {
@@ -78,15 +87,17 @@ public class GraphParser {
 
     private int hopGraph(int linePtr) {
         int size = graphLines.size();
+        int ptr = size -1;
         while (linePtr < size) {
             if (!StringUtils.containsIgnoreCase(graphLines.get(linePtr),
                     "graph")) {
                 linePtr++;
             } else {
+                ptr = linePtr;
                 break;
             }
         }
-        return linePtr;
+        return ptr;
     }
 
     private void removeBlankLines(String[] lines) {
