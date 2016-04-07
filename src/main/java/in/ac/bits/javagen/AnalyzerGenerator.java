@@ -159,16 +159,21 @@ public class AnalyzerGenerator {
                 .beginControlFlow(
                         "if ($N.equalsIgnoreCase($N.getPacketType()))",
                         fieldMap.get("relPkt"), pw)
-                /*
-                 * .addCode(setNPublish) .addCode(setEntity)
-                 */
-                .addCode(setEntity).addCode(setQuery).endControlFlow()
-                .addModifiers(Modifier.PUBLIC).build();
+                .addCode(setNPublish).addCode(setEntity).addCode(setQuery)
+                .endControlFlow().addModifiers(Modifier.PUBLIC).build();
         methods.add(method);
     }
 
     private CodeBlock setNPublisher() {
-        CodeBlock cb = CodeBlock.builder().build();
+        CodeBlock cb = CodeBlock.builder()
+                .addStatement(
+                        "set" + capitalize(protocol) + "Header(packetWrapper)")
+                .addStatement("String nextPacketType = setNextProtocolType()")
+                .addStatement("setStartByte(packetWrapper)")
+                .addStatement("setEndByte(packetWrapper)")
+                .addStatement(
+                        "publishTypeDetectionEvent(nextPacketType, startByte, endByte)")
+                .build();
         return cb;
     }
 
