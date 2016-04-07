@@ -70,6 +70,8 @@ public class AnalyzerGenerator {
 
         // add configure method
         generateConfigure(eventBus);
+        // add header setter
+        generateHeaderSetter();
         // add startByte method
         generateStartByte();
         // add endByte method
@@ -226,6 +228,31 @@ public class AnalyzerGenerator {
                 .addStatement("this.eventBus.post(new $T($N, $N, $N))",
                         ptdEvent, npt, sb, eb)
                 .addModifiers(Modifier.PUBLIC).build();
+        methods.add(method);
+    }
+
+    private void generateHeaderSetter() {
+        ClassName packet = ClassName.get("org.pcap4j.packet", "Packet");
+        ClassName packetWrapper = ClassName
+                .get("in.ac.bits.protocolanalyzer.analyzer", "PacketWrapper");
+
+        ParameterSpec pw = ParameterSpec.builder(packetWrapper, "packetWrapper")
+                .build();
+
+        ClassName hClass = ClassName.get(header.getPackageName(),
+                headerClass.name);
+        MethodSpec method = MethodSpec
+                .methodBuilder("set" + capitalize(protocol) + "Header")
+                .addModifiers(Modifier.PRIVATE).addParameter(pw)
+                .addStatement("$T packet = $N.getPacket()", packet, pw)
+                .addStatement("int startByte = $N.getStartByte()", pw)
+                .addStatement("byte[] rawPacket = packet.getRawData()")
+                .addStatement(
+                        "this." + protocol.toLowerCase()
+                                + "Header = $T.copyOfRange(rawPacket, startByte, "
+                                + "$T.TOTAL_HEADER_LENGTH + 1" + ")",
+                        Arrays.class, hClass)
+                .build();
         methods.add(method);
     }
 
