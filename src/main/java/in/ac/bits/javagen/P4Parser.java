@@ -14,6 +14,9 @@ import in.ac.bits.javagen.mvc.Header;
 public class P4Parser {
 
     @Autowired
+    private GraphParser graphParser;
+
+    @Autowired
     private HeaderClassGenerator headerGenerator;
 
     @Autowired
@@ -27,11 +30,14 @@ public class P4Parser {
 
     private Header header;
 
-    public void setGeneratedFields(List<FieldSpec> fields) {
+    private void setGeneratedFields(List<FieldSpec> fields) {
         generatedFields = fields;
     }
 
     public void generateHeaderClass(Header header) {
+
+        graphParser.setHeader(header);
+        graphParser.parse(header.getGraphString());
 
         this.header = header;
         String headerString = header.getHeaderString();

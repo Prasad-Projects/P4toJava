@@ -36,7 +36,6 @@ public class MainController {
             HttpServletRequest request) {
         String status = "success";
         System.out.println("Header string: \n" + header.getHeaderString());
-        System.out.println("Graph string: \n" + header.getGraphString());
         System.out.println("class = " + header.getProtocol());
         System.out.println("path = " + header.getPath());
         System.out.println("package = " + header.getPackageName());

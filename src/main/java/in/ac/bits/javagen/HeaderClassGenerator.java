@@ -72,8 +72,6 @@ public class HeaderClassGenerator {
     private FieldSpec createTotalLenField() {
 
         FieldSpec lastByte = fieldSpecs.get(fieldSpecs.size() - 1);
-        System.out.println(
-                "Last byte received = " + lastByte.initializer.toString());
 
         FieldSpec totalLen = FieldSpec.builder(int.class, "TOTAL_HEADER_LENGTH")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
