@@ -105,23 +105,16 @@ public class ProtocolCheckerGenerator {
 
     private void addCheckNAdd(boolean defaultStatus) {
         Builder mbuilder = MethodSpec.methodBuilder("checkNAdd")
-                .beginControlFlow("if (defaultStatus)").addCode(getIfBlock())
-                .endControlFlow().addModifiers(Modifier.PUBLIC);
+                .addStatement("protocol.defaultCustoms()")
+                .addModifiers(Modifier.PUBLIC);
         if (!defaultStatus) {
-            CodeBlock cb = getElseBlock();
-            mbuilder.beginControlFlow("else").addCode(cb).endControlFlow();
+            CodeBlock cb = getIfBlock();
+            mbuilder.beginControlFlow("if (!defaultStatus)").addCode(cb).endControlFlow();
         }
         methods.add(mbuilder.build());
     }
 
     private CodeBlock getIfBlock() {
-        CodeBlock cb = CodeBlock.builder()
-                .addStatement("protocol.defaultCustoms()").build();
-
-        return cb;
-    }
-
-    private CodeBlock getElseBlock() {
         com.squareup.javapoet.CodeBlock.Builder cbuilder = CodeBlock.builder();
 
         for (Entry<String, String> entry : pkgProtocol.entrySet()) {
