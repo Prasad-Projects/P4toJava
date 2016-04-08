@@ -52,7 +52,15 @@ public class AnalyzerGenerator {
 
     private TypeSpec headerClass;
 
+    private Map<String, String> analyzer = new HashMap<String, String>();
+    private Map<String, String> analyzerProtocol = new HashMap<String, String>();
+
     private static final String classNameSuffix = "Analyzer";
+
+    public void clearAll() {
+        analyzer = new HashMap<String, String>();
+        analyzerProtocol = new HashMap<String, String>();
+    }
 
     private String capitalize(String str) {
         String firstChar = String.valueOf(str.charAt(0)).toUpperCase();
@@ -108,6 +116,10 @@ public class AnalyzerGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        analyzer.put(analyzerClass.name, input.getPackageName());
+        analyzerProtocol.put(analyzerClass.name, protocol);
+
     }
 
     private void generateGetters() {

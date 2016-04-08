@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import in.ac.bits.javagen.P4Parser;
+import in.ac.bits.javagen.ProtocolCheckerGenerator;
 
 @Controller
 @RequestMapping("/")
@@ -18,6 +19,9 @@ public class MainController {
 
     @Autowired
     private P4Parser parser;
+
+    @Autowired
+    private ProtocolCheckerGenerator generator;
 
     @RequestMapping
     public ModelAndView home() {
@@ -29,6 +33,18 @@ public class MainController {
     public ModelAndView index() {
         ModelAndView mav = new ModelAndView("index");
         return mav;
+    }
+    
+    @RequestMapping("/clear")
+    public @ResponseBody String clear() {
+        parser.clearAll();
+        return "success";
+    }
+
+    @RequestMapping("/checker")
+    public @ResponseBody String checker() {
+        generator.generateChecker();
+        return "success";
     }
 
     @RequestMapping(value = "read", method = RequestMethod.POST)

@@ -93,6 +93,10 @@ public class P4Parser {
             }
         }
     }
+    
+    public void clearAll() {
+        analyzerGenerator.clearAll();
+    }
 
     public void generateAnalyzerClass() {
         analyzerGenerator.setHeaderVars(generatedFields);

@@ -64,10 +64,12 @@
 	</div>
 	<!-- <button id="genHello">Press to Generate</button> -->
 
-	<%-- <form accept-charset="UTF-8" role="form" method="GET"
-		action="<c:url value="/index"/>"> --%>
-	<button id="genHello" type="submit">Generate File</button>
-	<!-- </form> -->
+	<form accept-charset="UTF-8" role="form" method="GET"
+		action="<c:url value="/index"/>">
+		<button id="genHello" type="submit">Generate File</button>
+	</form>
+
+	<button id="clear" type="submit">Start Blank-slate</button>
 
 	<script type="text/javascript">
 		var p4header;
@@ -109,6 +111,27 @@
 						}
 					});
 		}
+		$("#clear").click(function() {
+			$
+            .ajax({
+                url : '/p4tojava/clear',
+                type : 'POST',
+                contentType : 'application/json; charset=utf-8',
+                dataType : 'text',
+                data : JSON.stringify(),
+                success : function(data) {
+                    if (data === "success") {
+                        aler("Cleared everything!")
+                    } else {
+                        alert("Error!!!");
+                    }
+                },
+                error : function() {
+                    alert("Something went wrong. Please try again later.");
+                }
+            });
+		});
+
 		$("#genHello").click(function() {
 
 			//Retrieve the first (and only!) File from the FileList object
