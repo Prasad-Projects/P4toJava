@@ -124,9 +124,15 @@ public class AnalyzerGenerator {
 
     private void generateGetters() {
 
+        graphParser.setInput(input);
+        graphParser.parse(input.getGraphString());
+        String conditionalField = graphParser.getConditionalHeaderField();
+
         headerFieldTypeMap = new HashMap<String, Class>();
         getters = new HashMap<String, MethodSpec>();
         int fieldIndex = 0;
+        ClassName byteOperator = ClassName
+                .get("in.ac.bits.protocolanalyzer.utils", "ByteOperator");
         for (String field : headerFields) {
             field = capitalize(field);
             ParameterSpec headerParam = ParameterSpec
@@ -134,18 +140,35 @@ public class AnalyzerGenerator {
                     .build();
             @SuppressWarnings("rawtypes")
             Class returnType = determineReturnType(fieldIndex);
-            MethodSpec method = MethodSpec.methodBuilder("get" + field)
-                    .addModifiers(Modifier.PUBLIC).addParameter(headerParam)
+            com.squareup.javapoet.MethodSpec.Builder mbuilder = MethodSpec
+                    .methodBuilder("get" + field).addModifiers(Modifier.PUBLIC)
+                    .addParameter(headerParam)
                     .addStatement("$T " + field.toLowerCase()
                             + " = $T.copyOfRange($N, " + protocol + "Header."
                             + headerVars.get(4 * fieldIndex + 1).name + ", "
                             + protocol + "Header."
                             + headerVars.get(4 * fieldIndex + 3).name + " + 1)",
-                            byte[].class, Arrays.class, headerParam)
-                    .addStatement("return " + field.toLowerCase())
-                    .returns(returnType).build();
+                            byte[].class, Arrays.class, headerParam);
+
+            if (!conditionalField.equalsIgnoreCase(field)) {
+                mbuilder.addStatement(
+                        "$T returnVar = $T.parseBytes" + returnType.getName()
+                                + "(" + field.toLowerCase() + ")",
+                        returnType, byteOperator)
+                        .addStatement("return returnVar");
+            } else {
+                ClassName hexClass = ClassName
+                        .get("org.apache.commons.codec.binary", "Hex");
+                returnType = String.class;
+                mbuilder.addStatement("return $T.encodeHexString("
+                        + field.toLowerCase() + ")", hexClass);
+            }
+            mbuilder.returns(returnType);
+            MethodSpec method = mbuilder.build();
             methods.add(method);
             headerFieldTypeMap.put(field, returnType);
+            System.out.println(
+                    "Getter map: " + field.toLowerCase() + "::" + method.name);
             getters.put(field.toLowerCase(), method);
             fieldIndex++;
         }
@@ -161,8 +184,6 @@ public class AnalyzerGenerator {
     }
 
     private void generateNPType() {
-        graphParser.setInput(input);
-        graphParser.parse(input.getGraphString());
 
         CodeBlock cases = buildCases();
 
