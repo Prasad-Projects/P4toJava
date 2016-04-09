@@ -68,6 +68,12 @@ public class AnalyzerGenerator {
         return str;
     }
 
+    private String decapitalize(String str) {
+        String firstChar = String.valueOf(str.charAt(0)).toUpperCase();
+        str = str.replaceFirst(String.valueOf(str.charAt(0)), firstChar);
+        return str;
+    }
+
     private String setClassName() {
         protocol = capitalize(protocol);
         return protocol + classNameSuffix;
@@ -98,10 +104,12 @@ public class AnalyzerGenerator {
         // add next protocol detector
         generateNPType();
 
+        ClassName customAnalyzer = ClassName
+                .get("in.ac.bits.protocolanalyzer.analyzer", "CustomAnalyzer");
         List<FieldSpec> fields = new ArrayList<FieldSpec>(fieldMap.values());
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
-                .addModifiers(Modifier.PUBLIC).addFields(fields)
-                .addMethods(methods).build();
+                .addSuperinterface(customAnalyzer).addModifiers(Modifier.PUBLIC)
+                .addFields(fields).addMethods(methods).build();
 
         JavaFile javaFile = JavaFile
                 .builder(input.getPackageName(), analyzerClass).build();
@@ -133,6 +141,8 @@ public class AnalyzerGenerator {
         int fieldIndex = 0;
         ClassName byteOperator = ClassName
                 .get("in.ac.bits.protocolanalyzer.utils", "ByteOperator");
+        ClassName bitOperator = ClassName
+                .get("in.ac.bits.protocolanalyzer.utils", "BitOperator");
         for (String field : headerFields) {
             field = capitalize(field);
             ParameterSpec headerParam = ParameterSpec
@@ -144,11 +154,11 @@ public class AnalyzerGenerator {
                     .methodBuilder("get" + field).addModifiers(Modifier.PUBLIC)
                     .addParameter(headerParam)
                     .addStatement("$T " + field.toLowerCase()
-                            + " = $T.copyOfRange($N, " + protocol + "Header."
-                            + headerVars.get(4 * fieldIndex + 1).name + ", "
+                            + " = $T.parse($N, " + protocol + "Header."
+                            + headerVars.get(4 * fieldIndex).name + ", "
                             + protocol + "Header."
-                            + headerVars.get(4 * fieldIndex + 3).name + " + 1)",
-                            byte[].class, Arrays.class, headerParam);
+                            + headerVars.get(4 * fieldIndex + 2).name + ")",
+                            byte[].class, bitOperator, headerParam);
 
             if (!conditionalField.equalsIgnoreCase(field)) {
                 mbuilder.addStatement(

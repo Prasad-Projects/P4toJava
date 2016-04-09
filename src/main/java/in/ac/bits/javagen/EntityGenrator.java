@@ -52,7 +52,8 @@ public class EntityGenrator {
                 "Document");
 
         AnnotationSpec document = AnnotationSpec.builder(esdoc)
-                .addMember("indexName", "protocol").addMember("type", protocol)
+                .addMember("indexName", "\"protocol\"")
+                .addMember("type", "\"" + protocol + "\"")
                 .addMember("shards", "1").addMember("replicas", "0").build();
 
         ClassName getter = ClassName.get("lombok", "Getter");
@@ -91,11 +92,17 @@ public class EntityGenrator {
         int count = 0;
         for (String fieldName : headerFields) {
             FieldSpec field = FieldSpec
-                    .builder(keys.get(count), fieldName.toLowerCase())
+                    .builder(keys.get(count), decapitalize(fieldName))
                     .addModifiers(Modifier.PRIVATE).build();
             fields.add(field);
             count++;
         }
+    }
+
+    private String decapitalize(String str) {
+        String firstChar = String.valueOf(str.charAt(0)).toLowerCase();
+        str = str.replaceFirst(String.valueOf(str.charAt(0)), firstChar);
+        return str;
     }
 
 }
