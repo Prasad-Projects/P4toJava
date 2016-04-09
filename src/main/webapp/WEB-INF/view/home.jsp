@@ -69,6 +69,9 @@
 		<button id="genHello" type="submit">Generate File</button>
 	</form>
 
+	<h4></h4>
+	<button id="checker" type="submit">Create Protocol checker</button>
+	<h4></h4>
 	<button id="clear" type="submit">Start Blank-slate</button>
 
 	<script type="text/javascript">
@@ -112,24 +115,23 @@
 					});
 		}
 		$("#clear").click(function() {
-			$
-            .ajax({
-                url : '/p4tojava/clear',
-                type : 'POST',
-                contentType : 'application/json; charset=utf-8',
-                dataType : 'text',
-                data : JSON.stringify(),
-                success : function(data) {
-                    if (data === "success") {
-                        aler("Cleared everything!")
-                    } else {
-                        alert("Error!!!");
-                    }
-                },
-                error : function() {
-                    alert("Something went wrong. Please try again later.");
-                }
-            });
+			$.ajax({
+				url : '/p4tojava/clear',
+				type : 'POST',
+				contentType : 'application/json; charset=utf-8',
+				dataType : 'text',
+				data : JSON.stringify(),
+				success : function(data) {
+					if (data === "success") {
+						aler("Cleared everything!")
+					} else {
+						alert("Error!!!");
+					}
+				},
+				error : function() {
+					alert("Something went wrong. Please try again later.");
+				}
+			});
 		});
 
 		$("#genHello").click(function() {
@@ -161,6 +163,33 @@
 				alert("Failed to load graph file");
 			}
 		});
+
+		$("#checker")
+				.click(
+						function() {
+							var form = {
+								path : $("#path").val()
+							}
+							$
+									.ajax({
+										url : '/p4tojava/checker',
+										type : 'POST',
+										contentType : 'application/json; charset=utf-8',
+										dataType : 'text',
+										data : JSON.stringify(form),
+										success : function(data) {
+											if (data === "success") {
+												alert("Successfully created protocol checker!")
+											} else {
+												alert("Error!!!");
+											}
+										},
+										error : function() {
+											console
+													.log("Something went wrong. Please try again later.");
+										}
+									});
+						});
 	</script>
 </body>
 </html>

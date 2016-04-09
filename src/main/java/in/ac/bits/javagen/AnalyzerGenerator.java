@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import javax.lang.model.element.Modifier;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.squareup.javapoet.AnnotationSpec;
@@ -106,9 +107,15 @@ public class AnalyzerGenerator {
 
         ClassName customAnalyzer = ClassName
                 .get("in.ac.bits.protocolanalyzer.analyzer", "CustomAnalyzer");
+        ClassName scopeClass = ClassName.get(Scope.class);
+        AnnotationSpec scope = AnnotationSpec.builder(scopeClass)
+                .addMember("value", "\"prototype\"").build();
+
         List<FieldSpec> fields = new ArrayList<FieldSpec>(fieldMap.values());
+
         TypeSpec analyzerClass = TypeSpec.classBuilder(className)
                 .addSuperinterface(customAnalyzer).addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Component.class).addAnnotation(scope)
                 .addFields(fields).addMethods(methods).build();
 
         JavaFile javaFile = JavaFile
@@ -344,7 +351,7 @@ public class AnalyzerGenerator {
                 .addStatement(
                         "this." + protocol.toLowerCase()
                                 + "Header = $T.copyOfRange(rawPacket, startByte, "
-                                + "$T.TOTAL_HEADER_LENGTH + 1" + ")",
+                                + "startByte + $T.TOTAL_HEADER_LENGTH" + ")",
                         Arrays.class, hClass)
                 .build();
         methods.add(method);

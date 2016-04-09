@@ -14,25 +14,5 @@
 		<button id="genHello" type="submit">Generate More Files</button>
 	</form>
 	<h4></h4>
-
-	<script type="text/javascript">
-		$.ajax({
-			url : '/p4tojava/checker',
-			type : 'POST',
-			contentType : 'application/json; charset=utf-8',
-			dataType : 'text',
-			data : JSON.stringify(),
-			success : function(data) {
-				if (data === "success") {
-					console.log("Success!")
-				} else {
-					alert("Error!!!");
-				}
-			},
-			error : function() {
-				console.log("Something went wrong. Please try again later.");
-			}
-		});
-	</script>
 </body>
 </html>

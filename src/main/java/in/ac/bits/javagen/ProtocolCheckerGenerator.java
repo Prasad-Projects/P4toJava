@@ -21,11 +21,17 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.MethodSpec.Builder;
 import com.squareup.javapoet.TypeSpec;
 
+import in.ac.bits.javagen.mvc.Input;
+import lombok.Setter;
+
 @Component
 public class ProtocolCheckerGenerator {
 
     @Autowired
     private AnalyzerGenerator generator;
+
+    @Setter
+    private Input input;
 
     private Map<String, String> pkgProtocol;
     private Map<String, String> analyzerProtocol;
@@ -53,7 +59,7 @@ public class ProtocolCheckerGenerator {
                 .addFields(fields).addMethods(methods).build();
 
         // change path later
-        String path = "/home/mihirkakrambe/";
+        String path = input.getPath();
         String packageName = "in.ac.bits.protocolanalyzer.protocol";
         JavaFile javaFile = JavaFile.builder(packageName, checkerClass).build();
         File file = new File(path);
@@ -109,7 +115,8 @@ public class ProtocolCheckerGenerator {
                 .addModifiers(Modifier.PUBLIC);
         if (!defaultStatus) {
             CodeBlock cb = getIfBlock();
-            mbuilder.beginControlFlow("if (!defaultStatus)").addCode(cb).endControlFlow();
+            mbuilder.beginControlFlow("if (!defaultStatus)").addCode(cb)
+                    .endControlFlow();
         }
         methods.add(mbuilder.build());
     }

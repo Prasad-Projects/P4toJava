@@ -42,7 +42,9 @@ public class MainController {
     }
 
     @RequestMapping("/checker")
-    public @ResponseBody String checker() {
+    public @ResponseBody String checker(@RequestBody Input input,
+            HttpServletRequest request) {
+        generator.setInput(input);
         generator.generateChecker();
         return "success";
     }
