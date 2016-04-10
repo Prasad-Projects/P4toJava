@@ -6,69 +6,84 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import in.ac.bits.javagen.mvc.Header;
+import com.squareup.javapoet.FieldSpec;
+
+import in.ac.bits.javagen.mvc.Input;
 
 @Component
 public class P4Parser {
 
     @Autowired
-    private HeaderClassGenerator generator;
+    private HeaderClassGenerator headerGenerator;
+
+    @Autowired
+    private AnalyzerGenerator analyzerGenerator;
 
     private ArrayList<String> headerLines;
-
     private List<String> fieldList;
     private List<Integer> startBits;
 
-    public void generateHeaderClass(Header header) {
+    private List<FieldSpec> generatedFields;
 
-        String headerString = header.getHeaderString();
+    private Input input;
 
-        System.out.println("Header string received: ");
-        System.out.println(headerString);
-        String className = header.getClassName();
-        String path = header.getPath();
-        String packageName = header.getPackageName();
+    private void setGeneratedFields(List<FieldSpec> fields) {
+        generatedFields = fields;
+    }
+
+    public void generateHeaderClass(Input input) {
+
+        this.input = input;
+        String headerString = input.getHeaderString();
+        String className = input.getProtocol() + "Header";
+        String path = input.getPath();
+        String packageName = input.getPackageName();
+
         fieldList = new ArrayList<String>();
         startBits = new ArrayList<Integer>();
         headerLines = new ArrayList<String>();
 
+        // pre-processing
         String[] lines = headerString.split("\\r?\\n");
         removeBlankLines(lines);
-        /*
-         * for (int i = 0; i < headerLines.size(); i++) { System.out.println(
-         * "Line: " + i + " " + headerLines.get(i)); }
-         */
         int linePtr = 0;
+        linePtr = getToFields(linePtr);
 
+        while (!headerLines.get(linePtr).contains("}")
+                && linePtr < headerLines.size()) {
+            String fieldLine = headerLines.get(linePtr);
+            String[] tokens = fieldLine.split(":");
+            String[] subtokens = tokens[1].split(";");
+            int startBit = Integer.parseInt(subtokens[0].trim());
+            String fieldName = tokens[0].trim();
+            fieldList.add(fieldName);
+            startBits.add(startBit);
+            linePtr++;
+        }
+        headerGenerator.setClassName(className);
+        headerGenerator.setPackageName(packageName);
+        headerGenerator.setPath(path);
+        List<FieldSpec> fields = headerGenerator.generateHeaderClass(fieldList,
+                startBits, 0);
+
+        /*
+         * save the list of generated fields to be used for generating analyzer
+         * class
+         */
+        setGeneratedFields(fields);
+
+    }
+
+    private int getToFields(int linePtr) {
         if (headerLines.get(linePtr).contains("header")) {
             while (!headerLines.get(linePtr).contains(":")) {
                 linePtr++;
             }
-            while (!headerLines.get(linePtr).contains("}")) {
-                String fieldLine = headerLines.get(linePtr);
-                System.out.println("Field line = " + fieldLine);
-                String[] tokens = fieldLine.split(":");
-                System.out.println("Token 1 = " + tokens[1]);
-                String[] subtokens = tokens[1].split(";");
-                System.out.println("Start bit = " + subtokens[0]);
-                int startBit = Integer.parseInt(subtokens[0].trim());
-                String fieldName = tokens[0].trim();
-                fieldList.add(fieldName);
-                startBits.add(startBit);
-                System.out.println("Field name: " + fieldName);
-                System.out.println("Field value: " + startBit);
-                linePtr++;
-            }
-            generator.setClassName(className);
-            generator.setPackageName(packageName);
-            generator.setPath(path);
-            generator.generateHeaderClass(fieldList, startBits, 0);
-
+            return linePtr;
         } else {
-            System.out
-                    .println("Invalid file! Does not contain fields keyword!");
+            throw new RuntimeException(
+                    "File doesn't contain the keyword: fields");
         }
-
     }
 
     private void removeBlankLines(String[] lines) {
@@ -77,5 +92,18 @@ public class P4Parser {
                 headerLines.add(lines[i].trim());
             }
         }
+    }
+    
+    public void clearAll() {
+        analyzerGenerator.clearAll();
+    }
+
+    public void generateAnalyzerClass() {
+        analyzerGenerator.setHeaderVars(generatedFields);
+        analyzerGenerator.setHeaderFields(fieldList);
+        analyzerGenerator.setProtocol(input.getProtocol());
+        analyzerGenerator.setHeaderClass(headerGenerator.getHeaderClass());
+        analyzerGenerator.setInput(input);
+        analyzerGenerator.generateAnalyzer();
     }
 }

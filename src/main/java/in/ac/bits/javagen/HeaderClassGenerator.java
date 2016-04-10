@@ -23,6 +23,12 @@ public class HeaderClassGenerator {
     private String path;
     private String packageName;
 
+    private TypeSpec genClass;
+
+    public TypeSpec getHeaderClass() {
+        return this.genClass;
+    }
+
     public void setPackageName(String packageName) {
         this.packageName = packageName;
     }
@@ -35,17 +41,17 @@ public class HeaderClassGenerator {
         this.path = path;
     }
 
-    public void generateHeaderClass(List<String> fields,
+    public List<FieldSpec> generateHeaderClass(List<String> fields,
             List<Integer> startBits, int offset) {
 
         fieldSpecs = new ArrayList<FieldSpec>();
         addFields(fields, startBits, offset);
 
-        com.squareup.javapoet.TypeSpec.Builder builder = TypeSpec
-                .classBuilder(this.className);
-        builder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
-        builder.addFields(fieldSpecs);
-        TypeSpec headerClass = builder.build();
+        FieldSpec totalLen = createTotalLenField();
+
+        TypeSpec headerClass = TypeSpec.classBuilder(this.className)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addFields(fieldSpecs).addField(totalLen).build();
 
         JavaFile javaFile = JavaFile.builder(packageName, headerClass).build();
         File file = new File(path);
@@ -58,6 +64,21 @@ public class HeaderClassGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        this.genClass = headerClass;
+        return this.fieldSpecs;
+    }
+
+    private FieldSpec createTotalLenField() {
+
+        FieldSpec lastByte = fieldSpecs.get(fieldSpecs.size() - 1);
+
+        FieldSpec totalLen = FieldSpec.builder(int.class, "TOTAL_HEADER_LENGTH")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$L",
+                        Integer.parseInt(lastByte.initializer.toString()) + 1)
+                .build();
+        return totalLen;
     }
 
     private void addFields(List<String> fields, List<Integer> startBits,

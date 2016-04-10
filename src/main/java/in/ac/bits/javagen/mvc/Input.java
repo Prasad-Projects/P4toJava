@@ -5,10 +5,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Header {
+public class Input {
 
     private String headerString;
-    private String className;
+    private String graphString;
+    private String protocol;
     private String path;
     private String packageName;
 }
