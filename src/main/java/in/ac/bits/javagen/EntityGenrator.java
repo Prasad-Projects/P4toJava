@@ -53,7 +53,7 @@ public class EntityGenrator {
 
         AnnotationSpec document = AnnotationSpec.builder(esdoc)
                 .addMember("indexName", "\"protocol\"")
-                .addMember("type", "\"" + protocol + "\"")
+                .addMember("type", "\"" + protocol.toLowerCase() + "\"")
                 .addMember("shards", "1").addMember("replicas", "0").build();
 
         ClassName getter = ClassName.get("lombok", "Getter");
