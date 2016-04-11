@@ -34,7 +34,7 @@ public class MainController {
         ModelAndView mav = new ModelAndView("index");
         return mav;
     }
-    
+
     @RequestMapping("/clear")
     public @ResponseBody String clear() {
         parser.clearAll();
@@ -54,6 +54,7 @@ public class MainController {
             HttpServletRequest request) {
         String status = "success";
         System.out.println("Header string: \n" + input.getHeaderString());
+        System.out.println("Beauty string: " + input.getBeautyString());
         System.out.println("class = " + input.getProtocol());
         System.out.println("path = " + input.getPath());
         System.out.println("package = " + input.getPackageName());

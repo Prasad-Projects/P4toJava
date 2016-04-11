@@ -9,6 +9,7 @@ public class Input {
 
     private String headerString;
     private String graphString;
+    private String beautyString;
     private String protocol;
     private String path;
     private String packageName;

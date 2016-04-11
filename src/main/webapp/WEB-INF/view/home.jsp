@@ -47,6 +47,11 @@
 		<input type="file" id="graphInput" />
 	</div>
 
+	<h4>Attach beautification file (if any)</h4>
+	<div>
+		<input type="file" id="beauty" />
+	</div>
+
 	<div>
 		<h4>Enter protocol name:</h4>
 		<input type="text" id="protocol">
@@ -77,6 +82,11 @@
 	<script type="text/javascript">
 		var p4header;
 		var p4graph;
+		var beauty;
+
+		function setBeauty(beautyFile) {
+			beauty = beautyFile;
+		}
 
 		function setheader(header) {
 			p4header = header;
@@ -90,6 +100,7 @@
 			var formValues = {
 				headerString : p4header,
 				graphString : p4graph,
+				beautyString : beauty,
 				protocol : $("#protocol").val(),
 				path : $("#path").val(),
 				packageName : $("#packageName").val()
@@ -139,6 +150,7 @@
 			//Retrieve the first (and only!) File from the FileList object
 			var f = document.getElementById("fileInput").files[0];
 			var g = document.getElementById("graphInput").files[0];
+			var b = document.getElementById("beauty").files[0];
 
 			if (f) {
 				var r = new FileReader();
@@ -156,11 +168,25 @@
 				r.onload = function(e) {
 					var p4graph = e.target.result;
 					setgraph(p4graph);
-					call();
+					if (b === undefined) {
+						call();
+					}
 				}
 				r.readAsText(g);
 			} else {
 				alert("Failed to load graph file");
+			}
+
+			if (b) {
+				var r = new FileReader();
+				r.onload = function(e) {
+					var beautyFile = e.target.result;
+					setBeauty(beautyFile);
+					call();
+				}
+				r.readAsText(b);
+			} else {
+				setBeauty("NULL");
 			}
 		});
 

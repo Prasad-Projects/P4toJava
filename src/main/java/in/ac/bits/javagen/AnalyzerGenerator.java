@@ -42,6 +42,9 @@ public class AnalyzerGenerator {
     @Autowired
     private GraphParser graphParser;
 
+    @Autowired
+    private BeautyParser beautyParser;
+
     private List<FieldSpec> headerVars;
     private List<String> headerFields;
     private Map<String, FieldSpec> fieldMap;
@@ -143,6 +146,22 @@ public class AnalyzerGenerator {
         graphParser.parse(input.getGraphString());
         String conditionalField = graphParser.getConditionalHeaderField();
 
+        beautyParser.setProtocol(protocol.toLowerCase());
+        Map<String, String> beautyMap = beautyParser
+                .parse(input.getBeautyString());
+
+        // remove these if and else
+        if (beautyMap == null) {
+            System.out.println("Beauty map is null!!");
+        } else {
+            for (Entry<String, String> entry : beautyMap.entrySet()) {
+                System.out.println(entry.getKey() + "::" + entry.getValue());
+            }
+        }
+
+        ClassName beautify = ClassName.get("in.ac.bits.protocolanalyzer.utils",
+                "Beautify");
+
         headerFieldTypeMap = new HashMap<String, Class>();
         getters = new HashMap<String, MethodSpec>();
         int fieldIndex = 0;
@@ -151,6 +170,7 @@ public class AnalyzerGenerator {
         ClassName bitOperator = ClassName
                 .get("in.ac.bits.protocolanalyzer.utils", "BitOperator");
         for (String field : headerFields) {
+            System.out.println("Field=" + field);
             field = capitalize(field);
             ParameterSpec headerParam = ParameterSpec
                     .builder(byte[].class, protocol.toLowerCase() + "Header")
@@ -167,18 +187,29 @@ public class AnalyzerGenerator {
                             + headerVars.get(4 * fieldIndex + 2).name + ")",
                             byte[].class, bitOperator, headerParam);
 
-            if (!conditionalField.equalsIgnoreCase(field)) {
-                mbuilder.addStatement(
-                        "$T returnVar = $T.parseBytes" + returnType.getName()
-                                + "(" + field.toLowerCase() + ")",
-                        returnType, byteOperator)
-                        .addStatement("return returnVar");
-            } else {
-                ClassName hexClass = ClassName
-                        .get("org.apache.commons.codec.binary", "Hex");
+            if (beautyMap != null
+                    && beautyMap.containsKey(field.toLowerCase())) {
+                System.out.println("beauty map contains key :" + field);
+                String mode = beautyMap.get(field.toLowerCase());
+                mbuilder.addStatement("return $T.beautify("
+                        + field.toLowerCase() + ", \"" + mode + "\")",
+                        beautify);
                 returnType = String.class;
-                mbuilder.addStatement("return $T.encodeHexString("
-                        + field.toLowerCase() + ")", hexClass);
+            } else {
+                if (!conditionalField.equalsIgnoreCase(field)) {
+                    mbuilder.addStatement(
+                            "$T returnVar = $T.parseBytes"
+                                    + returnType.getName() + "("
+                                    + field.toLowerCase() + ")",
+                            returnType, byteOperator)
+                            .addStatement("return returnVar");
+                } else {
+                    ClassName hexClass = ClassName
+                            .get("org.apache.commons.codec.binary", "Hex");
+                    returnType = String.class;
+                    mbuilder.addStatement("return $T.encodeHexString("
+                            + field.toLowerCase() + ")", hexClass);
+                }
             }
             mbuilder.returns(returnType);
             MethodSpec method = mbuilder.build();
@@ -403,7 +434,7 @@ public class AnalyzerGenerator {
                 .get("in.ac.bits.protocolanalyzer.protocol", "Protocol");
         FieldSpec relPkt = FieldSpec
                 .builder(String.class, "PACKET_TYPE_OF_RELEVANCE")
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
                 .initializer("$T." + protocol.toUpperCase(), protocolClass)
                 .build();
         fieldMap.put("relPkt", relPkt);
