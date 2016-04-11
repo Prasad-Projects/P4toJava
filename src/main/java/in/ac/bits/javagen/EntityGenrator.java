@@ -51,16 +51,11 @@ public class EntityGenrator {
                 "org.springframework.data.elasticsearch.annotations",
                 "Document");
 
-        AnnotationSpec document = AnnotationSpec.builder(esdoc)
-                .addMember("indexName", "\"protocol\"")
-                .addMember("type", "\"" + protocol.toLowerCase() + "\"")
-                .addMember("shards", "1").addMember("replicas", "0").build();
-
         ClassName getter = ClassName.get("lombok", "Getter");
         ClassName setter = ClassName.get("lombok", "Setter");
         TypeSpec entityClass = TypeSpec.classBuilder(protocol + "Entity")
                 .addModifiers(Modifier.PUBLIC).addAnnotation(getter)
-                .addAnnotation(setter).addAnnotation(document).addFields(fields)
+                .addAnnotation(setter).addFields(fields)
                 .build();
 
         JavaFile javaFile = JavaFile.builder(packageName, entityClass).build();

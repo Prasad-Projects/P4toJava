@@ -256,17 +256,20 @@ public class AnalyzerGenerator {
         if (!conditionalHeader.equalsIgnoreCase("NULL")) {
             for (Entry<String, String> entry : graphParser.getValProtocols()
                     .entrySet()) {
-                cbuilder.addStatement(
-                        "case \"" + entry.getKey() + "\"" + ": return Protocol."
-                                + entry.getValue().toUpperCase());
+                cbuilder.addStatement("case \"" + entry.getKey() + "\""
+                        + ": return Protocol.get(\""
+                        + entry.getValue().toUpperCase() + "\")");
             }
         }
-        cbuilder.addStatement("default: return Protocol.END_PROTOCOL");
+        cbuilder.addStatement("default: return Protocol.get(\"END_PROTOCOL\")");
         CodeBlock cb = cbuilder.build();
         return cb;
     }
 
     private void generateAnalyze() {
+
+        ClassName protocolClass = ClassName
+                .get("in.ac.bits.protocolanalyzer.protocol", "Protocol");
 
         // subscribe
         ClassName sub = ClassName.get("com.google.common.eventbus",
@@ -284,8 +287,9 @@ public class AnalyzerGenerator {
         MethodSpec method = MethodSpec.methodBuilder("analyze")
                 .addAnnotation(subann).addParameter(pw)
                 .beginControlFlow(
-                        "if ($N.equalsIgnoreCase($N.getPacketType()))",
-                        fieldMap.get("relPkt"), pw)
+                        "if ($T.get(\"" + protocol.toUpperCase() + "\")"
+                                + ".equalsIgnoreCase($N.getPacketType()))",
+                        protocolClass, pw)
                 .addCode(setNPublish).addCode(setEntity).addCode(setQuery)
                 .endControlFlow().addModifiers(Modifier.PUBLIC).build();
         methods.add(method);
@@ -333,13 +337,22 @@ public class AnalyzerGenerator {
 
     private CodeBlock querySetter() {
 
+        ClassName indexQueryBuilder = ClassName.get(
+                "org.springframework.data.elasticsearch.core.query",
+                "IndexQueryBuilder");
+
         ClassName indexQuery = ClassName.get(
                 "org.springframework.data.elasticsearch.core.query",
                 "IndexQuery");
 
         CodeBlock cb = CodeBlock.builder()
-                .addStatement("$T query = new $T()", indexQuery, indexQuery)
-                .addStatement("query.setObject(entity)")
+                .addStatement("$T builder = new $T()", indexQueryBuilder,
+                        indexQueryBuilder)
+                .addStatement(
+                        "$T query = builder.withIndexName(this.indexName).withType(\""
+                                + protocol.toLowerCase()
+                                + "\").withObject(entity).build()",
+                        indexQuery)
                 .addStatement("$N.save(query)", fieldMap.get("repo")).build();
         return cb;
     }
@@ -420,33 +433,35 @@ public class AnalyzerGenerator {
     }
 
     private void generateConfigure(TypeName eventBus) {
+        ClassName repoClass = ClassName.get(
+                "in.ac.bits.protocolanalyzer.persistence.repository",
+                "AnalysisRepository");
         MethodSpec configure = MethodSpec.methodBuilder("configure")
                 .addParameter(eventBus, "eventBus")
+                .addParameter(repoClass, "repository")
+                .addParameter(String.class, "sessionName")
                 .addStatement("this.eventBus = eventBus")
                 .addStatement("this.eventBus.register(this)")
+                .addStatement("this.repository = repository")
+                .addStatement("this.indexName = \"protocol_\" + sessionName")
                 .addModifiers(Modifier.PUBLIC).build();
         methods.add(configure);
     }
 
     private TypeName generateFields() {
 
-        ClassName protocolClass = ClassName
-                .get("in.ac.bits.protocolanalyzer.protocol", "Protocol");
-        FieldSpec relPkt = FieldSpec
-                .builder(String.class, "PACKET_TYPE_OF_RELEVANCE")
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
-                .initializer("$T." + protocol.toUpperCase(), protocolClass)
-                .build();
-        fieldMap.put("relPkt", relPkt);
-
         ClassName repoClass = ClassName.get(
                 "in.ac.bits.protocolanalyzer.persistence.repository",
                 "AnalysisRepository");
         Builder repoBuilder = FieldSpec
                 .builder(repoClass.topLevelClassName(), "repository")
-                .addAnnotation(Autowired.class).addModifiers(Modifier.PRIVATE);
+                .addModifiers(Modifier.PRIVATE);
         FieldSpec repo = repoBuilder.build();
         fieldMap.put("repo", repo);
+
+        FieldSpec indexName = FieldSpec
+                .builder(String.class, "indexName", Modifier.PRIVATE).build();
+        fieldMap.put("indexName", indexName);
 
         ClassName ebClass = ClassName.get("com.google.common.eventbus",
                 "EventBus");
