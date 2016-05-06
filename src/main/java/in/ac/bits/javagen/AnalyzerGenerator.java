@@ -351,7 +351,8 @@ public class AnalyzerGenerator {
                 .addStatement(
                         "$T query = builder.withIndexName(this.indexName).withType(\""
                                 + protocol.toLowerCase()
-                                + "\").withObject(entity).build()",
+								+ "\").withId(String.valueOf(packetWrapper.getPacketId()))"
+								+ ".withObject(entity).build()",
                         indexQuery)
                 .addStatement("$N.save(query)", fieldMap.get("repo")).build();
         return cb;
