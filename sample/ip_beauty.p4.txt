@@ -1,0 +1,8 @@
+header ipv4 {
+	totalLen : hex;
+	srcAddr : ip4;
+	dstAddr : ip4;
+	hdrChecksum : hex;
+}
+
+
