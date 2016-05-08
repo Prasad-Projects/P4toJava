@@ -1,4 +1,4 @@
-header_type tcp_t {
+header tcp {
     fields {
         srcPort : 16;
         dstPort : 16;
