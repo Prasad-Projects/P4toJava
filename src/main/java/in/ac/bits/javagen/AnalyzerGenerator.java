@@ -238,7 +238,7 @@ public class AnalyzerGenerator {
         String val = "\"NO_CONDITIONAL_HEADER_FIELD\"";
         if (!graphParser.getConditionalHeaderField().equalsIgnoreCase("NULL")) {
             MethodSpec getter = getters
-                    .get(graphParser.getConditionalHeaderField());
+                    .get(graphParser.getConditionalHeaderField().toLowerCase());
             val = getter.name + "(this." + protocol.toLowerCase() + "Header)";
         }
         MethodSpec method = MethodSpec.methodBuilder("setNextProtocolType")
