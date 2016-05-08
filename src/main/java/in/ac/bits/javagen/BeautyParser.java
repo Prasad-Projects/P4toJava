@@ -56,6 +56,7 @@ public class BeautyParser {
                 String line = beautyLines.get(protocolPtr);
                 String[] tokens = line.split(":");
                 System.out.println("Token 0:" + tokens[0].trim());
+				tokens[1] = tokens[1].substring(0, tokens[1].length() - 1);
                 System.out.println("Token 1:" + tokens[1].trim());
                 beautyMap.put(tokens[0].trim().toLowerCase(), tokens[1].trim().toLowerCase());
                 protocolPtr++;
