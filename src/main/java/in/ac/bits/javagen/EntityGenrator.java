@@ -51,12 +51,19 @@ public class EntityGenrator {
                 "org.springframework.data.elasticsearch.annotations",
                 "Document");
 
+		AnnotationSpec document = AnnotationSpec
+				.builder(esdoc)
+				.addMember("indexName", "\"protocol\"")
+				.addMember("type",
+						"\"" + input.getProtocol().toLowerCase() + "\"")
+				.build();
+
         ClassName getter = ClassName.get("lombok", "Getter");
         ClassName setter = ClassName.get("lombok", "Setter");
-        TypeSpec entityClass = TypeSpec.classBuilder(protocol + "Entity")
-                .addModifiers(Modifier.PUBLIC).addAnnotation(getter)
-                .addAnnotation(setter).addFields(fields)
-                .build();
+		TypeSpec entityClass = TypeSpec.classBuilder(protocol + "Entity")
+				.addModifiers(Modifier.PUBLIC).addAnnotation(getter)
+				.addAnnotation(setter).addAnnotation(document)
+				.addFields(fields).build();
 
         JavaFile javaFile = JavaFile.builder(packageName, entityClass).build();
         File file = new File(input.getPath());
@@ -74,8 +81,12 @@ public class EntityGenrator {
     }
 
     private void generatePacketId() {
-        FieldSpec pid = FieldSpec.builder(long.class, "packetId")
-                .addModifiers(Modifier.PRIVATE).build();
+    	
+		ClassName idclass = ClassName.get(
+				"org.springframework.data.annotation", "Id");
+		AnnotationSpec id = AnnotationSpec.builder(idclass).build();
+		FieldSpec pid = FieldSpec.builder(long.class, "packetId")
+				.addAnnotation(id).addModifiers(Modifier.PRIVATE).build();
         fields.add(pid);
 
     }
